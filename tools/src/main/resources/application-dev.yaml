@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/daitong?useSSL=false&serverTimezone=UTC
+    username: root
+    password: 111111
+    driver-class-name: com.mysql.cj.jdbc.Driver
+logging:
+  level:
+    org.mybatis: DEBUG
+    org.mybatis.spring: DEBUG
