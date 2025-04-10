@@ -52,6 +52,7 @@ public class AiController {
             dishResponse.setCode("200");
             dishResponse.setMessage("请求成功");
             String result = qwenChatService.chat(content, Promotes.DISH_RECOMMEND_SYS);
+            log.info("result:"+result);
             dishResponse.setData(JSONObject.parseArray(result, DishResult.class));
             return dishResponse;
         }catch (Exception e){
