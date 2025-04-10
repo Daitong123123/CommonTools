@@ -7,6 +7,7 @@ import com.daitong.bo.aichat.DishRequest;
 import com.daitong.bo.aichat.DishResponse;
 import com.daitong.bo.aichat.DishResult;
 import com.daitong.constants.Promotes;
+import com.daitong.service.DoubaoChatService;
 import com.daitong.service.QwenChatService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class AiController {
 
     @Autowired
     private QwenChatService qwenChatService;
+
+    @Autowired
+    private DoubaoChatService doubaoChatService;
 
     @PostMapping("/chat")
     public ChatResponse chat(@RequestBody ChatRequest chatRequest) {
