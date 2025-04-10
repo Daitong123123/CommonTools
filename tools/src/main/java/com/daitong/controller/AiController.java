@@ -51,9 +51,9 @@ public class AiController {
         try{
             dishResponse.setCode("200");
             dishResponse.setMessage("请求成功");
-            String result = qwenChatService.chat(content, Promotes.DISH_RECOMMEND_SYS);
-            //修复转义问题
-            result = result.replace("\\\\n","&NBSP").replace("\\","").replace("&NBSP","\\n");
+//            String result = qwenChatService.chat(content, Promotes.DISH_RECOMMEND_SYS);
+            String result = "\"[{\\\"complex\\\":2,\\\"dishName\\\":\\\"麻婆豆腐\\\",\\\"dishStep\\\":\\\"准备食材：嫩豆腐400克，牛肉末50克，青蒜苗2根，郫县豆瓣酱20克，生抽10克，料酒10克，淀粉5克，花椒粉2克，辣椒粉3克，盐2克，糖1克，鸡精1克，水200毫升，食用油20克。\\\\n1. 豆腐切块，放入加了盐的沸水中焯水1分钟，捞出备用\\\\n2. 青蒜苗切段，郫县豆瓣酱剁细\\\\n3. 热锅冷油，加入牛肉末炒至变色，约需2分钟\\\\n4. 加入郫县豆瓣酱、辣椒粉，小火炒香1分钟\\\\n5. 倒入水、生抽、料酒、糖和盐，煮开后加入豆腐，中小火煮5分钟\\\\n6. 淀粉加水调匀，倒入锅中勾芡，翻拌均匀\\\\n7. 加入青蒜苗，再煮1分钟\\\\n8. 最后撒上花椒粉、鸡精，翻拌均匀即可出锅\\\"}]\"";
+            result = result.replace("\\n","&NBSP").replace("\\","").replace("&NBSP","\\n");
             result = result.substring(1,result.length()-1);
             log.info("result:"+result);
             dishResponse.setData(JSONObject.parseArray(result, DishResult.class));
