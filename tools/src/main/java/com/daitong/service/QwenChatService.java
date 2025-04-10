@@ -82,6 +82,11 @@ public class QwenChatService {
             return "网络请求失败，翻译失败";
         }
         QwenResult qwenResult = JSONObject.parseObject(response.body(), QwenResult.class);
-        return qwenResult.getChoices().get(0).getMessage().getContent();
+        String result =  qwenResult.getChoices().get(0).getMessage().getContent();
+        return turnToJson(result);
+    }
+
+    private String turnToJson(String result){
+        return result.replace("json","").replace("'''","");
     }
 }
