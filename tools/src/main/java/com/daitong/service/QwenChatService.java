@@ -37,7 +37,7 @@ public class QwenChatService {
                 .messages(Arrays.asList(systemMsg, userMsg))
                 .resultFormat(GenerationParam.ResultFormat.MESSAGE)
                 .build();
-        return JsonUtils.toJson(gen.call(param)) ;
+        return JsonUtils.toJson(gen.call(param).getOutput().getChoices().get(0).getMessage().getContent()) ;
     }
 
     public String chat(String content) throws NoApiKeyException, InputRequiredException {
