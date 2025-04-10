@@ -87,6 +87,6 @@ public class QwenChatService {
     }
 
     private String turnToJson(String result){
-        return result.replace("json","").replace("'''","");
+        return result.replace("json","").replace("```","");
     }
 }
