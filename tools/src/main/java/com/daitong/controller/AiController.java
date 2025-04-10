@@ -52,6 +52,9 @@ public class AiController {
             dishResponse.setCode("200");
             dishResponse.setMessage("请求成功");
             String result = qwenChatService.chat(content, Promotes.DISH_RECOMMEND_SYS);
+            //修复转义问题
+            result = result.replace("\\\\n","&NBSP").replace("\\","").replace("&NBSP","\\n");
+            result = result.substring(1,result.length()-1);
             log.info("result:"+result);
             dishResponse.setData(JSONObject.parseArray(result, DishResult.class));
             return dishResponse;
