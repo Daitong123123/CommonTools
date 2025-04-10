@@ -25,7 +25,7 @@ public class QwenResult {
         @SerializedName("finish_reason")
         private String finishReason;
         private long index;
-        private Message delta ;
+        private Message message ;
 
         /**
          * Message
