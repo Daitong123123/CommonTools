@@ -25,8 +25,8 @@ public class BaiduTranslateService {
 
     public String translateByBaiduMachine(String content, String from, String to) {
         HttpRequest httpRequest = HttpRequest.post(translateUrl);
-        java.net.Proxy proxy = new java.net.Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.huawei.com", 8080));
-        httpRequest.setProxy(proxy);
+//        java.net.Proxy proxy = new java.net.Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.huawei.com", 8080));
+//        httpRequest.setProxy(proxy);
         httpRequest.header(Sec_Fetch_Mode, Sec_Fetch_Mode_Value)
                 .header(Sec_Fetch_Site, Sec_Fetch_Site_Value);
         JSONObject body = new JSONObject();
