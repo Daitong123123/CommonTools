@@ -7,6 +7,7 @@ import com.alibaba.dashscope.common.Role;
 import com.alibaba.dashscope.exception.InputRequiredException;
 import com.alibaba.dashscope.exception.NoApiKeyException;
 import com.alibaba.dashscope.utils.JsonUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -16,11 +17,13 @@ public class QwenChatService {
 
     private String apiKey = "sk-61c195da368d4970b92c7e08728a72a5";
 
-    public String chat(String content) throws NoApiKeyException, InputRequiredException {
+    private String systemPromote = "You are a helpful assistant.";
+
+    public String chat(String content, String systemPromote) throws NoApiKeyException, InputRequiredException {
         Generation gen = new Generation();
         Message systemMsg = Message.builder()
                 .role(Role.SYSTEM.getValue())
-                .content("You are a helpful assistant.")
+                .content(StringUtils.isBlank(systemPromote)?this.systemPromote:systemPromote)
                 .build();
         Message userMsg = Message.builder()
                 .role(Role.USER.getValue())
@@ -35,6 +38,9 @@ public class QwenChatService {
                 .resultFormat(GenerationParam.ResultFormat.MESSAGE)
                 .build();
         return JsonUtils.toJson(gen.call(param)) ;
+    }
 
+    public String chat(String content) throws NoApiKeyException, InputRequiredException {
+       return chat(content, null);
     }
 }
