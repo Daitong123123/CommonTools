@@ -1,12 +1,17 @@
 package com.daitong.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.daitong.bo.aichat.ChatRequest;
 import com.daitong.bo.aichat.ChatResponse;
 import com.daitong.bo.aichat.DishRequest;
 import com.daitong.bo.aichat.DishResponse;
 import com.daitong.bo.aichat.DishResult;
+import com.daitong.bo.aichat.UnlikeRequest;
+import com.daitong.bo.common.CommonResponse;
 import com.daitong.constants.Promotes;
+import com.daitong.repository.DishDisappearRepository;
+import com.daitong.repository.entity.DishDisappear;
 import com.daitong.service.AiChatService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -23,6 +29,9 @@ public class AiController {
 
     @Autowired
     private AiChatService aiChatService;
+
+    @Autowired
+    private DishDisappearRepository dishDisappearRepository;
 
 
     @PostMapping("/chat")
@@ -39,6 +48,48 @@ public class AiController {
             chatResponse.setMessage(e.getMessage());
         }
         return chatResponse;
+    }
+
+    @PostMapping("/unlike")
+    public CommonResponse unlike(@RequestBody UnlikeRequest unlikeRequest) {
+        CommonResponse commonResponse = new CommonResponse();
+        try{
+            commonResponse.setCode("200");
+            commonResponse.setMessage("请求成功");
+            Date now = new Date();
+            unlikeRequest.getUnlikes().forEach(s->{
+                DishDisappear dishDisappear = new DishDisappear();
+                dishDisappear.setDishName(s);
+                dishDisappear.setCreatedAt(now);
+                dishDisappearRepository.save(dishDisappear);
+            });
+            return commonResponse;
+        }catch (Exception e){
+            log.error("请求失败", e);
+            commonResponse.setCode("500");
+            commonResponse.setMessage(e.getMessage());
+        }
+        return commonResponse;
+    }
+
+    @PostMapping("/unlike-cancel")
+    public CommonResponse unlikeCancel(@RequestBody UnlikeRequest unlikeRequest) {
+        CommonResponse commonResponse = new CommonResponse();
+        try{
+            commonResponse.setCode("200");
+            commonResponse.setMessage("请求成功");
+            unlikeRequest.getUnlikes().forEach(s->{
+                QueryWrapper<DishDisappear> queryWrapper = new QueryWrapper<>();
+                queryWrapper.lambda().eq(DishDisappear::getDishName, s);
+                dishDisappearRepository.remove(queryWrapper);
+            });
+            return commonResponse;
+        }catch (Exception e){
+            log.error("请求失败", e);
+            commonResponse.setCode("500");
+            commonResponse.setMessage(e.getMessage());
+        }
+        return commonResponse;
     }
 
     @PostMapping("/dish")

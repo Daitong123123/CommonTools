@@ -9,4 +9,5 @@ public class DishResult {
     private String dishName = "";
     private String complex = "";
     private String dishStep = "";
+    private String dishEffect = "";
 }

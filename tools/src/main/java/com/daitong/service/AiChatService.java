@@ -11,19 +11,26 @@ import com.alibaba.dashscope.exception.NoApiKeyException;
 import com.alibaba.dashscope.utils.JsonUtils;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.daitong.bo.aichat.QwenResult;
+import com.daitong.repository.DishDisappearRepository;
+import com.daitong.repository.entity.DishDisappear;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.Arrays;
+import java.util.List;
 
 @Service
 @Log4j2
 public class AiChatService {
 
+    @Autowired
+    private DishDisappearRepository dishDisappearRepository;
     private String qwenApiKey = "sk-61c195da368d4970b92c7e08728a72a5";
 
     private String doubaoApiKey = "13edaecf-245b-4397-85aa-ce50e0e834bf";
@@ -32,6 +39,7 @@ public class AiChatService {
 
     //千问百炼平台
     private String qwenUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+
 
     // 豆包引擎
     private String doubaoUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
@@ -71,9 +79,18 @@ public class AiChatService {
 
 
     public String chatByHttp(String content, String systemPromote, String url, String model, String apiKey)  {
+        List<DishDisappear> unlikes = dishDisappearRepository.list();
+        //有不喜欢的菜修改提示语
+        if(CollectionUtils.isNotEmpty(unlikes)){
+            StringBuilder stringBuilder = new StringBuilder(content);
+            stringBuilder.append("之前有推荐过");
+            unlikes.forEach(dish-> stringBuilder.append(dish.getDishName()).append(" "));
+            stringBuilder.append("但是我不太喜欢，不要推荐上面列出菜名的菜");
+            content=stringBuilder.toString();
+        }
         HttpRequest httpRequest = HttpRequest.post(url);
-//        java.net.Proxy proxy = new java.net.Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.huawei.com", 8080));
-//        httpRequest.setProxy(proxy);
+        java.net.Proxy proxy = new java.net.Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.huawei.com", 8080));
+        httpRequest.setProxy(proxy);
         httpRequest.header("Authorization" ,"Bearer "+apiKey);
         JSONObject body = new JSONObject();
         JSONArray messages = new JSONArray();
