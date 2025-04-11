@@ -9,4 +9,6 @@ public class DishRequest {
     private String dishType ;
     private String dishNumber ;
     private String dishTaste ;
+    private String complex;
+    private String preference;
 }

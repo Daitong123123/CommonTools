@@ -22,13 +22,19 @@ import java.util.Arrays;
 
 @Service
 @Log4j2
-public class QwenChatService {
+public class AiChatService {
 
-    private String apiKey = "sk-61c195da368d4970b92c7e08728a72a5";
+    private String qwenApiKey = "sk-61c195da368d4970b92c7e08728a72a5";
+
+    private String doubaoApiKey = "13edaecf-245b-4397-85aa-ce50e0e834bf";
 
     private String systemPromote = "You are a helpful assistant.";
 
+    //千问百炼平台
     private String qwenUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+
+    // 豆包引擎
+    private String doubaoUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
 
     public String chat(String content, String systemPromote) throws NoApiKeyException, InputRequiredException {
         Generation gen = new Generation();
@@ -42,7 +48,7 @@ public class QwenChatService {
                 .build();
         GenerationParam param = GenerationParam.builder()
                 // 若没有配置环境变量，请用百炼API Key将下行替换为：.apiKey("sk-xxx")
-                .apiKey(apiKey)
+                .apiKey(qwenApiKey)
                 // 此处以qwen-plus为例，可按需更换模型名称。模型列表：https://help.aliyun.com/zh/model-studio/getting-started/models
                 .model("qwen-plus")
                 .messages(Arrays.asList(systemMsg, userMsg))
@@ -55,9 +61,17 @@ public class QwenChatService {
        return chat(content, null);
     }
 
+    public String chatToQwen(String content, String systemPromote){
+        return chatByHttp(content, systemPromote, qwenUrl, "qwen-plus", qwenApiKey);
+    }
 
-    public String chatByHttp(String content, String systemPromote) throws Exception {
-        HttpRequest httpRequest = HttpRequest.post(qwenUrl);
+    public String chatToDoubao(String content, String systemPromote){
+        return chatByHttp(content, systemPromote, doubaoUrl, "doubao-pro-256k-241115", doubaoApiKey);
+    }
+
+
+    public String chatByHttp(String content, String systemPromote, String url, String model, String apiKey)  {
+        HttpRequest httpRequest = HttpRequest.post(url);
 //        java.net.Proxy proxy = new java.net.Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.huawei.com", 8080));
 //        httpRequest.setProxy(proxy);
         httpRequest.header("Authorization" ,"Bearer "+apiKey);
@@ -71,7 +85,7 @@ public class QwenChatService {
         systemMessage.put("content", StringUtils.isBlank(systemPromote)?this.systemPromote:systemPromote);
         messages.add(userMessage);
         messages.add(systemMessage);
-        body.put("model", "qwen-plus");
+        body.put("model", model);
         body.put("messages", messages);
         httpRequest.body(JSONObject.toJSONString(body));
         HttpResponse response = null;

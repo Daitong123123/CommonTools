@@ -7,8 +7,7 @@ import com.daitong.bo.aichat.DishRequest;
 import com.daitong.bo.aichat.DishResponse;
 import com.daitong.bo.aichat.DishResult;
 import com.daitong.constants.Promotes;
-import com.daitong.service.DoubaoChatService;
-import com.daitong.service.QwenChatService;
+import com.daitong.service.AiChatService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,10 +22,8 @@ import java.util.List;
 public class AiController {
 
     @Autowired
-    private QwenChatService qwenChatService;
+    private AiChatService aiChatService;
 
-    @Autowired
-    private DoubaoChatService doubaoChatService;
 
     @PostMapping("/chat")
     public ChatResponse chat(@RequestBody ChatRequest chatRequest) {
@@ -34,7 +31,7 @@ public class AiController {
         try{
             chatResponse.setCode("200");
             chatResponse.setMessage("请求成功");
-            chatResponse.setData(qwenChatService.chat(chatRequest.getContent()));
+            chatResponse.setData(aiChatService.chat(chatRequest.getContent()));
             return chatResponse;
         }catch (Exception e){
             log.error("请求失败", e);
@@ -51,11 +48,11 @@ public class AiController {
         DishResult dishResult = new DishResult();
         dishList.add(dishResult);
         String content = String.format(Promotes.DISH_RECOMMEND_USER, dishRequest.getDishType(), dishRequest.getDishNumber(), dishRequest.getDishTaste(),
-                JSONObject.toJSONString(dishList));
+                dishRequest.getComplex(),dishRequest.getPreference(),JSONObject.toJSONString(dishList));
         try{
             dishResponse.setCode("200");
             dishResponse.setMessage("请求成功");
-            String result = qwenChatService.chatByHttp(content, Promotes.DISH_RECOMMEND_SYS);
+            String result = aiChatService.chatToDoubao(content, Promotes.DISH_RECOMMEND_SYS);
             log.info("result:"+result);
             dishResponse.setData(JSONObject.parseArray(result, DishResult.class));
             return dishResponse;
