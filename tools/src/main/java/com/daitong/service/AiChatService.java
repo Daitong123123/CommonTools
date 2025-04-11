@@ -89,8 +89,8 @@ public class AiChatService {
             content=stringBuilder.toString();
         }
         HttpRequest httpRequest = HttpRequest.post(url);
-        java.net.Proxy proxy = new java.net.Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.huawei.com", 8080));
-        httpRequest.setProxy(proxy);
+//        java.net.Proxy proxy = new java.net.Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.huawei.com", 8080));
+//        httpRequest.setProxy(proxy);
         httpRequest.header("Authorization" ,"Bearer "+apiKey);
         JSONObject body = new JSONObject();
         JSONArray messages = new JSONArray();
