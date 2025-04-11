@@ -13,7 +13,7 @@ public class Config {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/dish")
+                registry.addMapping("/**")
                         .allowedOrigins("http://47.108.130.95:3000")
                         .allowedMethods("POST")
                         .allowedHeaders("*");
