@@ -1,6 +1,9 @@
 package com.daitong.filter;
 
+import com.daitong.bo.common.UserInfo;
 import com.daitong.manager.SessionManager;
+import com.daitong.manager.UserManager;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.*;
 import javax.servlet.http.Cookie;
@@ -9,6 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class AuthenticationFilter implements Filter {
+
+
 
     private static final String[] WHITELIST = {"/login", "/register", "/phone-binding"};
 
@@ -35,6 +40,7 @@ public class AuthenticationFilter implements Filter {
                         chain.doFilter(request, response);
                         return;
                     }
+//                    UserManager.setCurrentUser();
                     chain.doFilter(request, response);
                     return;
                 }

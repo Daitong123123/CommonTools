@@ -22,12 +22,12 @@ public class Config {
             }
         };
     }
-    @Bean
-    public FilterRegistrationBean<AuthenticationFilter> authenticationFilterRegistration() {
-        FilterRegistrationBean<AuthenticationFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new AuthenticationFilter());
-        registration.addUrlPatterns("/**"); // 配置过滤器的拦截路径
-        return registration;
-    }
+//    @Bean
+//    public FilterRegistrationBean<AuthenticationFilter> authenticationFilterRegistration() {
+//        FilterRegistrationBean<AuthenticationFilter> registration = new FilterRegistrationBean<>();
+//        registration.setFilter(new AuthenticationFilter());
+//        registration.addUrlPatterns("/**"); // 配置过滤器的拦截路径
+//        return registration;
+//    }
 
 }

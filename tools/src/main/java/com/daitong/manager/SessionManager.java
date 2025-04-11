@@ -1,5 +1,7 @@
 package com.daitong.manager;
 
+import com.daitong.bo.common.UserInfo;
+
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SessionManager {
     private static final ConcurrentHashMap<String, Long> sessions = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, UserInfo> users = new ConcurrentHashMap<>();
 
     // 添加一个新的会话
     /**
@@ -17,9 +20,14 @@ public class SessionManager {
      *
      * @param sessionId sessionId
      */
-    public static void addSession(String sessionId) {
+    public static void addSession(String sessionId, String userName, String userId) {
         sessions.put(sessionId, System.currentTimeMillis());
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUserId(userId);
+        userInfo.setUserName(userName);
+        users.put(sessionId,userInfo);
     }
+
 
     // 验证会话是否有效，并清除过期的会话
     /**
@@ -35,6 +43,7 @@ public class SessionManager {
             if ((currentTime - creationTime) > 3600 * 1000) {
                 // 如果会话已过期，从会话管理器中移除
                 sessions.remove(sessionId);
+                users.remove(sessionId);
                 return false;
             }
             return true;
