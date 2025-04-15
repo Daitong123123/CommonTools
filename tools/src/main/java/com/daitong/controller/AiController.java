@@ -105,9 +105,7 @@ public class AiController {
         try{
             unlikeResponse.setCode("200");
             unlikeResponse.setMessage("请求成功");
-            QueryWrapper<DishDisappear> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().eq(DishDisappear::getUserId, UserManager.getCurrentUser().getUserId());
-            List<DishDisappear> list = dishDisappearRepository.list(queryWrapper);
+           List<DishDisappear> list = dishDisappearRepository.getUnlikes();
             unlikeResponse.setTotal(CollectionUtils.isEmpty(list)?0:list.size());
             unlikeResponse.setCurPage(pageRequest.getCurPage());
             unlikeResponse.setPageSize(pageRequest.getPageSize());

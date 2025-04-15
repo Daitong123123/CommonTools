@@ -83,7 +83,7 @@ public class AiChatService {
 
 
     public String chatByHttp(String content, String systemPromote, String url, String model, String apiKey)  {
-        List<DishDisappear> unlikes = dishDisappearRepository.list();
+        List<DishDisappear> unlikes = dishDisappearRepository.getUnlikes();
         //有不喜欢的菜修改提示语
         if(CollectionUtils.isNotEmpty(unlikes)){
             StringBuilder stringBuilder = new StringBuilder(content);
