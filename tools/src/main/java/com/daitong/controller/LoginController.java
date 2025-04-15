@@ -56,7 +56,7 @@ public class LoginController {
         }
 
 
-        // 注册新用户
+        //   注册新用户
         if (userRepository.registerUser(username, password)) {
             commonResponse.setCode("200");
             commonResponse.setMessage("注册成功");
