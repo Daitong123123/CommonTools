@@ -12,6 +12,7 @@ import com.daitong.bo.aichat.UnlikeResponse;
 import com.daitong.bo.common.CommonResponse;
 import com.daitong.bo.common.PageRequest;
 import com.daitong.constants.Promotes;
+import com.daitong.manager.UserManager;
 import com.daitong.repository.DishDisappearRepository;
 import com.daitong.repository.entity.DishDisappear;
 import com.daitong.service.AiChatService;
@@ -64,6 +65,7 @@ public class AiController {
             unlikeRequest.getUnlikes().forEach(s->{
                 DishDisappear dishDisappear = new DishDisappear();
                 dishDisappear.setDishName(s);
+                dishDisappear.setUserId(UserManager.getCurrentUser().getUserId());
                 dishDisappear.setCreatedAt(now);
                 dishDisappearRepository.save(dishDisappear);
             });
@@ -84,7 +86,8 @@ public class AiController {
             commonResponse.setMessage("请求成功");
             unlikeRequest.getUnlikes().forEach(s->{
                 QueryWrapper<DishDisappear> queryWrapper = new QueryWrapper<>();
-                queryWrapper.lambda().eq(DishDisappear::getDishName, s);
+                queryWrapper.lambda().eq(DishDisappear::getDishName, s)
+                        .eq(DishDisappear::getUserId, UserManager.getCurrentUser().getUserId());
                 dishDisappearRepository.remove(queryWrapper);
             });
             return commonResponse;
@@ -102,7 +105,9 @@ public class AiController {
         try{
             unlikeResponse.setCode("200");
             unlikeResponse.setMessage("请求成功");
-            List<DishDisappear> list = dishDisappearRepository.list();
+            QueryWrapper<DishDisappear> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(DishDisappear::getUserId, UserManager.getCurrentUser().getUserId());
+            List<DishDisappear> list = dishDisappearRepository.list(queryWrapper);
             unlikeResponse.setTotal(CollectionUtils.isEmpty(list)?0:list.size());
             unlikeResponse.setCurPage(pageRequest.getCurPage());
             unlikeResponse.setPageSize(pageRequest.getPageSize());

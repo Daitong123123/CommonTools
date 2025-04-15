@@ -20,4 +20,6 @@ public class DishDisappear {
     private String dishName;
 
     private Date createdAt;
+
+    private String userId;
 }

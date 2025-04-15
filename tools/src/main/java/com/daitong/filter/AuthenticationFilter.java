@@ -1,6 +1,7 @@
 package com.daitong.filter;
 
 import com.daitong.manager.SessionManager;
+import com.daitong.manager.UserManager;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -36,6 +37,7 @@ public class AuthenticationFilter implements Filter {
                 if ("sessionId".equals(cookie.getName())) {
                     String sessionId = cookie.getValue();
                     if (SessionManager.isValidSession(sessionId)) {
+                        UserManager.setCurrentUser(SessionManager.getUserBySessionId(sessionId));
                         chain.doFilter(request, response);
                         return;
                     }

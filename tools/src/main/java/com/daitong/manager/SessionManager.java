@@ -28,6 +28,11 @@ public class SessionManager {
         users.put(sessionId,userInfo);
     }
 
+    public static UserInfo getUserBySessionId(String sessionId){
+        return users.get(sessionId);
+    }
+
+
 
     // 验证会话是否有效，并清除过期的会话
     /**
