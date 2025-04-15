@@ -18,6 +18,7 @@ import com.daitong.repository.DishDisappearRepository;
 import com.daitong.repository.entity.DishDisappear;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.InetSocketAddress;
@@ -43,6 +44,9 @@ public class AiChatService {
 
     // 豆包引擎
     private String doubaoUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
+
+    @Value("${spring.profiles.active:}")
+    private String env ;
 
     public String chat(String content, String systemPromote) throws NoApiKeyException, InputRequiredException {
         Generation gen = new Generation();
@@ -89,8 +93,10 @@ public class AiChatService {
             content=stringBuilder.toString();
         }
         HttpRequest httpRequest = HttpRequest.post(url);
-//        java.net.Proxy proxy = new java.net.Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.huawei.com", 8080));
-//        httpRequest.setProxy(proxy);
+        if("dev".equals(env)){
+            java.net.Proxy proxy = new java.net.Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.huawei.com", 8080));
+            httpRequest.setProxy(proxy);
+        }
         httpRequest.header("Authorization" ,"Bearer "+apiKey);
         JSONObject body = new JSONObject();
         JSONArray messages = new JSONArray();

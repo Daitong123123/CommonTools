@@ -22,6 +22,14 @@ public class UserRepository extends ServiceImpl<UserMapper, UserEntity> {
         return CollectionUtils.isNotEmpty(list(queryWrapper));
     }
 
+    public String getId(String userName, String passWord){
+        QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserEntity::getUserName, userName)
+                .eq(UserEntity::getPassWord, passWord);
+        return list(queryWrapper).get(0).getUserId();
+    }
+
     public boolean isUsernameExists(String userName){
         QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()

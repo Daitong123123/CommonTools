@@ -1,19 +1,19 @@
 package com.daitong.filter;
 
-import com.daitong.bo.common.UserInfo;
 import com.daitong.manager.SessionManager;
-import com.daitong.manager.UserManager;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class AuthenticationFilter implements Filter {
-
-
 
     private static final String[] WHITELIST = {"/login", "/register", "/phone-binding"};
 
@@ -40,13 +40,10 @@ public class AuthenticationFilter implements Filter {
                         chain.doFilter(request, response);
                         return;
                     }
-//                    UserManager.setCurrentUser();
-                    chain.doFilter(request, response);
-                    return;
+//
                 }
             }
         }
-
         // 如果没有有效的 Cookie，返回未授权响应
         httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         httpResponse.getWriter().write("未授权");

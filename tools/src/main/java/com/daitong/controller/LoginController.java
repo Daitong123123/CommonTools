@@ -31,7 +31,7 @@ public class LoginController {
             cookie.setMaxAge(3600); // 设置 Cookie 有效期为 1 小时
             response.addCookie(cookie);
             // 将会话 ID 添加到会话管理器
-//            SessionManager.addSession(sessionId, username, );
+            SessionManager.addSession(sessionId, username, userRepository.getId(username, password));
             commonResponse.setCode("200");
             commonResponse.setMessage("ok");
             return commonResponse;
