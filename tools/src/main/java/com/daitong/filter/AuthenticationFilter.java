@@ -1,7 +1,6 @@
 package com.daitong.filter;
 
 import com.daitong.manager.SessionManager;
-import org.springframework.core.Ordered;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
