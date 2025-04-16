@@ -45,4 +45,11 @@ public class UserRepository extends ServiceImpl<UserMapper, UserEntity> {
         entity.setCreatedAt(new Date());
         return this.save(entity);
     }
+
+    public UserEntity getUserInfo(String userId){
+        QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserEntity::getUserId, userId);
+        return this.getOne(queryWrapper);
+    }
 }

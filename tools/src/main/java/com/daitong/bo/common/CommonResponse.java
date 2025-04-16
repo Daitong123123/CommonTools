@@ -9,7 +9,7 @@ import lombok.Data;
  */
 @Data
 public class CommonResponse {
-    private String code;
+    private String code = "200";
 
-    private String message;
+    private String message = "OK";
 }
