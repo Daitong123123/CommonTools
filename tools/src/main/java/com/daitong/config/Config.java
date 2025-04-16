@@ -16,6 +16,7 @@ public class Config {
         CorsConfiguration config = new CorsConfiguration();
         config.addAllowedOriginPattern("http://localhost:3000");
         config.addAllowedOriginPattern("http://47.108.130.95");
+        config.addAllowedOriginPattern("http://dinner.daitong.xyz");
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);
