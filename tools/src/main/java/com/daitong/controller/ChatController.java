@@ -15,6 +15,7 @@ import com.daitong.repository.UserRepository;
 import com.daitong.repository.entity.ChatRecord;
 import com.daitong.repository.entity.FriendShip;
 import com.daitong.repository.entity.UserEntity;
+import com.daitong.service.ChatService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,6 +41,9 @@ public class ChatController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ChatService chatService;
+
     @PostMapping("/send-message")
     public CommonResponse sendMessage(@RequestBody SendMessageRequest messageRequest) {
         CommonResponse commonResponse = new CommonResponse();
@@ -45,6 +51,7 @@ public class ChatController {
             commonResponse.setCode("200");
             commonResponse.setMessage("请求成功");
            chatRecordRepository.insertRecord(messageRequest);
+           chatService.sendMessage(messageRequest);
             return commonResponse;
         }catch (Exception e){
             log.error("请求失败", e);
@@ -61,6 +68,13 @@ public class ChatController {
                 .eq(ChatRecord::getUserIdFrom, getMessageRequest.getUserIdFrom())
                 .eq(ChatRecord::getUserIdTo, getMessageRequest.getUserIdTo());
         List<ChatRecord> records = chatRecordRepository.list(queryWrapper);
+        QueryWrapper<ChatRecord> queryWrapper2 = new QueryWrapper<>();
+        queryWrapper2.lambda()
+                .eq(ChatRecord::getUserIdFrom, getMessageRequest.getUserIdTo())
+                .eq(ChatRecord::getUserIdTo, getMessageRequest.getUserIdFrom());
+        List<ChatRecord> records2 = chatRecordRepository.list(queryWrapper2);
+        records.addAll(records2);
+        records.sort(Comparator.comparing(ChatRecord::getCreatedAt));
         MessageResponse messageResponse = new MessageResponse();
         messageResponse.setTotal(records.size());
         messageResponse.setRecords(records.stream()
