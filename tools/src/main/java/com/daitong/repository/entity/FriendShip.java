@@ -23,6 +23,10 @@ public class FriendShip {
     // '关系状态（0-待确认，1-已通过，2-已拉黑）
     private int status;
 
+    private String comment;
+
+    private String whoRequest;
+
     private Date createdAt;
     private Date updatedAt;
 }

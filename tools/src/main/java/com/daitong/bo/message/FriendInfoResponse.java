@@ -8,5 +8,6 @@ import lombok.ToString;
 @ToString
 public class FriendInfoResponse extends CommonResponse {
     private String userId;
+    private String userName;
     private String userNickName;
 }

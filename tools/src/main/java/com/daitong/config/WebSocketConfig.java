@@ -55,18 +55,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private static class CustomHandshakeInterceptor implements HandshakeInterceptor {
         @Override
         public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-            try {
-                // 打印请求头信息用于调试
-                org.springframework.http.HttpHeaders headers = request.getHeaders();
-                for (Map.Entry<String, java.util.List<String>> entry : headers.entrySet()) {
-                    System.out.println("Header: " + entry.getKey() + " - " + entry.getValue());
-                }
-                return true;
-            } catch (Exception e) {
-                System.err.println("Exception in beforeHandshake: " + e.getMessage());
-                e.printStackTrace();
-                return false;
-            }
+           return  true;
         }
 
         @Override
