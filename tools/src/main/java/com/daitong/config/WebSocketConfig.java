@@ -29,9 +29,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/chat-websocket")
+                .setAllowedOrigins("*")
                 .setHandshakeHandler(new CustomHandshakeHandler())
                 .addInterceptors(new CustomHandshakeInterceptor(), new CustomOriginInterceptor());
-//                .withSockJS();
     }
 
     private static class CustomHandshakeHandler implements HandshakeHandler {
