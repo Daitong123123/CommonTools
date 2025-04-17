@@ -30,8 +30,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/chat-websocket")
                 .setHandshakeHandler(new CustomHandshakeHandler())
+                .setAllowedOrigins("*")
                 .addInterceptors(new CustomHandshakeInterceptor(), new CustomOriginInterceptor());
-//                .withSockJS();
     }
 
     private static class CustomHandshakeHandler implements HandshakeHandler {
