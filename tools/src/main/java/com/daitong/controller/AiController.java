@@ -2,23 +2,24 @@ package com.daitong.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.daitong.bo.aichat.ChatRequest;
-import com.daitong.bo.aichat.ChatResponse;
-import com.daitong.bo.aichat.DishRequest;
-import com.daitong.bo.aichat.DishResponse;
-import com.daitong.bo.aichat.DishResult;
-import com.daitong.bo.aichat.UnlikeRequest;
-import com.daitong.bo.aichat.UnlikeResponse;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.daitong.bo.aichat.CookBookLikesResponse;
+import com.daitong.bo.aichat.*;
 import com.daitong.bo.common.CommonResponse;
 import com.daitong.bo.common.PageRequest;
 import com.daitong.constants.Promotes;
 import com.daitong.manager.UserManager;
+import com.daitong.repository.CookBookLikesRepository;
 import com.daitong.repository.DishDisappearRepository;
+import com.daitong.repository.entity.CookBookLikes;
 import com.daitong.repository.entity.DishDisappear;
 import com.daitong.service.AiChatService;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,6 +38,9 @@ public class AiController {
 
     @Autowired
     private DishDisappearRepository dishDisappearRepository;
+
+    @Autowired
+    private CookBookLikesRepository cookBookLikesRepository;
 
 
     @PostMapping("/chat")
@@ -149,6 +153,88 @@ public class AiController {
             dishResponse.setMessage(e.getMessage());
         }
         return dishResponse;
+    }
+
+    @PostMapping("/query-likes")
+    public CookBookLikesResponse queryLikes(@RequestBody QueryLikesRequest queryLikesRequest){
+        CookBookLikesResponse cookBookLikesResponse = new CookBookLikesResponse();
+        try{
+            cookBookLikesResponse.setCode("200");
+            cookBookLikesResponse.setMessage("请求成功");
+            Page<CookBookLikes> page = new Page<>(queryLikesRequest.getCurPage(), queryLikesRequest.getPageSize());
+            IPage<CookBookLikes> list = cookBookLikesRepository.page(page,new QueryWrapper<CookBookLikes>()
+                    .lambda().eq(CookBookLikes::getUserId, UserManager.getCurrentUser().getUserId())
+                    .eq(StringUtils.isNotEmpty(queryLikesRequest.getDishFrom()), CookBookLikes::getDishFrom, queryLikesRequest.getDishFrom())
+                    .eq(StringUtils.isNotEmpty(queryLikesRequest.getComplex()), CookBookLikes::getComplex, queryLikesRequest.getComplex())
+                    .eq(StringUtils.isNotEmpty(queryLikesRequest.getTasty()), CookBookLikes::getTasty, queryLikesRequest.getTasty()));
+            cookBookLikesResponse.setTotal((int) list.getTotal());
+            cookBookLikesResponse.setCurPage(queryLikesRequest.getCurPage());
+            cookBookLikesResponse.setPageSize(queryLikesRequest.getPageSize());
+            cookBookLikesResponse.setCookBookLikesList(list.getRecords());
+            return cookBookLikesResponse;
+        }catch (Exception e){
+            log.error("请求失败", e);
+            cookBookLikesResponse.setCode("500");
+            cookBookLikesResponse.setMessage(e.getMessage());
+        }
+        return cookBookLikesResponse;
+    }
+
+    @GetMapping("/query-likes-options")
+    public CookBookLikesOptionsResponse queryLikesOptions(){
+        CookBookLikesOptionsResponse cookBookLikesResponse = new CookBookLikesOptionsResponse();
+        try{
+            cookBookLikesResponse.setCode("200");
+            cookBookLikesResponse.setMessage("请求成功");
+
+            List<String> dishFromList = cookBookLikesRepository.selectObjs("dish_from").stream().map(String::valueOf).collect(Collectors.toList());
+            List<String> compelxList = cookBookLikesRepository.selectObjs("complex").stream().map(String::valueOf).collect(Collectors.toList());
+            List<String> tastyList = cookBookLikesRepository.selectObjs("tasty").stream().map(String::valueOf).collect(Collectors.toList());
+            cookBookLikesResponse.setCompelxList(compelxList);
+            cookBookLikesResponse.setTastyList(tastyList);
+            cookBookLikesResponse.setDishFromList(dishFromList);
+            return cookBookLikesResponse;
+        }catch (Exception e){
+            log.error("请求失败", e);
+            cookBookLikesResponse.setCode("500");
+            cookBookLikesResponse.setMessage(e.getMessage());
+        }
+        return cookBookLikesResponse;
+    }
+
+    @PostMapping("/add-like")
+    public CommonResponse addLike(@RequestBody CookBookLikeRequest cookBookLikeRequest){
+        CommonResponse commonResponse = new CommonResponse();
+        try{
+            commonResponse.setCode("200");
+            commonResponse.setMessage("请求成功");
+            cookBookLikeRequest.getCookBook().setUserId(UserManager.getCurrentUser().getUserId());
+            cookBookLikeRequest.getCookBook().setCreatedAt(new Date());
+            cookBookLikeRequest.getCookBook().setUpdatedAt(new Date());
+            cookBookLikesRepository.save(cookBookLikeRequest.getCookBook());
+            return commonResponse;
+        }catch (Exception e){
+            log.error("请求失败", e);
+            commonResponse.setCode("500");
+            commonResponse.setMessage(e.getMessage());
+        }
+        return commonResponse;
+    }
+
+    @PostMapping("/delete-likes")
+    public CommonResponse deleteLikes(@RequestBody List<Long> deleteList){
+        CommonResponse commonResponse = new CommonResponse();
+        try{
+            commonResponse.setCode("200");
+            commonResponse.setMessage("请求成功");
+            cookBookLikesRepository.removeByIds(deleteList);
+            return commonResponse;
+        }catch (Exception e){
+            log.error("请求失败", e);
+            commonResponse.setCode("500");
+            commonResponse.setMessage(e.getMessage());
+        }
+        return commonResponse;
     }
 
 
