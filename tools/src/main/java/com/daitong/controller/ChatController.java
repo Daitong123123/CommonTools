@@ -1,11 +1,13 @@
 package com.daitong.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.daitong.bo.aichat.ChatResponse;
 import com.daitong.bo.common.CommonResponse;
 import com.daitong.bo.message.FriendInfoResponse;
 import com.daitong.bo.message.FriendShipRequest;
 import com.daitong.bo.message.FriendShipResponse;
+import com.daitong.bo.message.FriendToBeInfo;
+import com.daitong.bo.message.FriendToBeRequest;
+import com.daitong.bo.message.FriendToBeResponse;
 import com.daitong.bo.message.GetMessageRequest;
 import com.daitong.bo.message.MessageResponse;
 import com.daitong.bo.message.SendMessageRequest;
@@ -23,8 +25,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,13 +49,13 @@ public class ChatController {
     @PostMapping("/send-message")
     public CommonResponse sendMessage(@RequestBody SendMessageRequest messageRequest) {
         CommonResponse commonResponse = new CommonResponse();
-        try{
+        try {
             commonResponse.setCode("200");
             commonResponse.setMessage("请求成功");
-           chatRecordRepository.insertRecord(messageRequest);
-           chatService.sendMessage(messageRequest);
+            chatRecordRepository.insertRecord(messageRequest);
+            chatService.sendMessage(messageRequest);
             return commonResponse;
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("请求失败", e);
             commonResponse.setCode("500");
             commonResponse.setMessage(e.getMessage());
@@ -61,8 +63,113 @@ public class ChatController {
         return commonResponse;
     }
 
+    @PostMapping("/friend-request")
+    public CommonResponse friendRequest(@RequestBody FriendToBeRequest friendToBeRequest) {
+        CommonResponse commonResponse = new CommonResponse();
+        try {
+            commonResponse.setCode("200");
+            commonResponse.setMessage("请求成功");
+            FriendShip friendShip = new FriendShip();
+            friendShip.setUserId(friendToBeRequest.getUserId());
+            friendShip.setComment(friendToBeRequest.getContent());
+            friendShip.setFriendId(friendToBeRequest.getFriendId());
+            friendShip.setWhoRequest(friendToBeRequest.getUserId());
+            friendShip.setStatus(0);
+            friendShip.setUpdatedAt(new Date());
+            friendShip.setCreatedAt(new Date());
+            friendShipRepository.save(friendShip);
+            chatService.sendFriendRequest(friendToBeRequest);
+            return commonResponse;
+        } catch (Exception e) {
+            log.error("请求失败", e);
+            commonResponse.setCode("500");
+            commonResponse.setMessage(e.getMessage());
+        }
+        return commonResponse;
+    }
+
+    @PostMapping("/friend-request-agree")
+    public CommonResponse friendRequestAgree(@RequestBody FriendToBeRequest friendToBeRequest) {
+        CommonResponse commonResponse = new CommonResponse();
+        try {
+            commonResponse.setCode("200");
+            commonResponse.setMessage("请求成功");
+            FriendShip oldShip = friendShipRepository.getOne(new QueryWrapper<FriendShip>().lambda().eq(FriendShip::getFriendId, friendToBeRequest.getUserId()).eq(FriendShip::getUserId, friendToBeRequest.getFriendId()));
+            oldShip.setStatus(1);
+            friendShipRepository.updateById(oldShip);
+            FriendShip ship = new FriendShip();
+            ship.setStatus(1);
+            ship.setUserId(oldShip.getFriendId());
+            ship.setWhoRequest(oldShip.getWhoRequest());
+            ship.setFriendId(oldShip.getUserId());
+            ship.setCreatedAt(new Date());
+            ship.setUpdatedAt(new Date());
+            ship.setComment(oldShip.getComment());
+            friendShipRepository.save(ship);
+            chatService.sendFriendRequestAgree(friendToBeRequest);
+            return commonResponse;
+        } catch (Exception e) {
+            log.error("请求失败", e);
+            commonResponse.setCode("500");
+            commonResponse.setMessage(e.getMessage());
+        }
+        return commonResponse;
+    }
+
+    @PostMapping("/friend-request-disagree")
+    public CommonResponse friendRequestDisagree(@RequestBody FriendToBeRequest friendToBeRequest) {
+        CommonResponse commonResponse = new CommonResponse();
+        try {
+            commonResponse.setCode("200");
+            commonResponse.setMessage("请求成功");
+            FriendShip oldShip = friendShipRepository.getOne(new QueryWrapper<FriendShip>().lambda().eq(FriendShip::getFriendId, friendToBeRequest.getUserId()).eq(FriendShip::getUserId, friendToBeRequest.getFriendId()));
+            oldShip.setStatus(2);
+            friendShipRepository.updateById(oldShip);
+            chatService.sendFriendRequestDisagree(friendToBeRequest);
+            return commonResponse;
+        } catch (Exception e) {
+            log.error("请求失败", e);
+            commonResponse.setCode("500");
+            commonResponse.setMessage(e.getMessage());
+        }
+        return commonResponse;
+    }
+
+    @PostMapping("/friend-request-query")
+    public FriendToBeResponse friendRequestQuery(@RequestBody FriendToBeRequest friendToBeRequest) {
+        FriendToBeResponse friendToBeResponse = new FriendToBeResponse();
+        try {
+            friendToBeResponse.setCode("200");
+            friendToBeResponse.setMessage("请求成功");
+            QueryWrapper<FriendShip> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda()
+                    .eq(FriendShip::getStatus, 0)
+                    .and(wrapper -> wrapper
+                            .eq(FriendShip::getFriendId, friendToBeRequest.getUserId())
+                            .or()
+                            .eq(FriendShip::getUserId, friendToBeRequest.getUserId())
+                    );
+            List<FriendShip> list = friendShipRepository.list(queryWrapper);
+            List<FriendToBeInfo> friendToBeInfos = list.stream().map(friendShip -> {
+                FriendToBeInfo friendToBeInfo = new FriendToBeInfo();
+                friendToBeInfo.setRequestFrom(friendShip.getUserId());
+                friendToBeInfo.setRequestTo(friendShip.getFriendId());
+                friendToBeInfo.setContent(friendShip.getComment());
+                friendToBeInfo.setStatus(String.valueOf(friendShip.getStatus()));
+                return friendToBeInfo;
+            }).collect(Collectors.toList());
+            friendToBeResponse.setFriendToBeRequestList(friendToBeInfos);
+            return friendToBeResponse;
+        } catch (Exception e) {
+            log.error("请求失败", e);
+            friendToBeResponse.setCode("500");
+            friendToBeResponse.setMessage(e.getMessage());
+        }
+        return friendToBeResponse;
+    }
+
     @PostMapping("/message-query")
-    public MessageResponse getMessageHistory(@RequestBody GetMessageRequest getMessageRequest){
+    public MessageResponse getMessageHistory(@RequestBody GetMessageRequest getMessageRequest) {
         QueryWrapper<ChatRecord> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(ChatRecord::getUserIdFrom, getMessageRequest.getUserIdFrom())
@@ -77,16 +184,24 @@ public class ChatController {
         records.sort(Comparator.comparing(ChatRecord::getCreatedAt));
         MessageResponse messageResponse = new MessageResponse();
         messageResponse.setTotal(records.size());
-        messageResponse.setRecords(records.stream()
-                .skip((long) (getMessageRequest.getCurPage() - 1) *getMessageRequest.getPageSize())
-                .limit(getMessageRequest.getPageSize()).collect(Collectors.toList()));
+        if (getMessageRequest.getCurPage() == null
+                || getMessageRequest.getPageSize() == null
+                || getMessageRequest.getCurPage() == 0
+                || getMessageRequest.getPageSize() == 0) {
+            messageResponse.setRecords(records);
+        } else {
+            messageResponse.setRecords(records.stream()
+                    .skip((long) (getMessageRequest.getCurPage() - 1) * getMessageRequest.getPageSize())
+                    .limit(getMessageRequest.getPageSize()).collect(Collectors.toList()));
+        }
+
         messageResponse.setCurPage(getMessageRequest.getCurPage());
         messageResponse.setPageSize(getMessageRequest.getPageSize());
         return messageResponse;
     }
 
     @PostMapping("/friend-ship")
-    public FriendShipResponse getMyFriends(@RequestBody FriendShipRequest friendShipRequest){
+    public FriendShipResponse getMyFriends(@RequestBody FriendShipRequest friendShipRequest) {
         QueryWrapper<FriendShip> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(FriendShip::getUserId, friendShipRequest.getUserId())
@@ -98,10 +213,11 @@ public class ChatController {
     }
 
     @GetMapping("/friend-info")
-    public FriendInfoResponse getFriendInfo(String userId){
+    public FriendInfoResponse getFriendInfo(String userId) {
         FriendInfoResponse friendInfoResponse = new FriendInfoResponse();
         UserEntity userInfo = userRepository.getUserInfo(userId);
         friendInfoResponse.setUserNickName(userInfo.getUserName());
+        friendInfoResponse.setUserName(userInfo.getUserName());
         friendInfoResponse.setUserId(userId);
         return friendInfoResponse;
     }
