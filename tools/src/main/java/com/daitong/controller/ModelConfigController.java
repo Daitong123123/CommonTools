@@ -87,10 +87,10 @@ public class ModelConfigController {
             baseResponse.setMessage("请求成功");
             ModelConfig oldConfig = modelConfigRepository.getOne(new LambdaQueryWrapper<ModelConfig>().eq(ModelConfig::isSelected, true));
             oldConfig.setSelected(false);
-            modelConfigRepository.save(oldConfig);
+            modelConfigRepository.updateById(oldConfig);
             ModelConfig config = modelConfigRepository.getOne(new LambdaQueryWrapper<ModelConfig>().eq(ModelConfig::getModelType, modelType).eq(ModelConfig::getModel, model));
             config.setSelected(true);
-            modelConfigRepository.save(config);
+            modelConfigRepository.updateById(config);
             return baseResponse;
         } catch (Exception e) {
             log.error("请求失败", e);
@@ -127,7 +127,7 @@ public class ModelConfigController {
             baseResponse.setMessage("请求成功");
             config.setUpdatedAt(new Date());
             config.setUpdatedAt(new Date());
-            modelConfigRepository.saveOrUpdate(config);
+            modelConfigRepository.updateById(config);
             return baseResponse;
         } catch (Exception e) {
             log.error("请求失败", e);
