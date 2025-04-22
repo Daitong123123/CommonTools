@@ -143,7 +143,7 @@ public class AiController {
         try{
             dishResponse.setCode("200");
             dishResponse.setMessage("请求成功");
-            String result = aiChatService.chatToDoubao(content, Promotes.DISH_RECOMMEND_SYS);
+            String result = aiChatService.chatToAiByConfig(content, Promotes.DISH_RECOMMEND_SYS);
             log.info("result:"+result);
             dishResponse.setData(JSONObject.parseArray(result, DishResult.class));
             return dishResponse;

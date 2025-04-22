@@ -11,11 +11,14 @@ import com.alibaba.dashscope.exception.NoApiKeyException;
 import com.alibaba.dashscope.utils.JsonUtils;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.daitong.bo.aichat.QwenResult;
 import com.daitong.repository.DishDisappearRepository;
+import com.daitong.repository.ModelConfigRepository;
 import com.daitong.repository.entity.DishDisappear;
+import com.daitong.repository.entity.ModelConfig;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +35,9 @@ public class AiChatService {
 
     @Autowired
     private DishDisappearRepository dishDisappearRepository;
+
+    @Autowired
+    private ModelConfigRepository modelConfigRepository;
     private String qwenApiKey = "sk-61c195da368d4970b92c7e08728a72a5";
 
     private String doubaoApiKey = "13edaecf-245b-4397-85aa-ce50e0e834bf";
@@ -73,12 +79,23 @@ public class AiChatService {
        return chat(content, null);
     }
 
-    public String chatToQwen(String content, String systemPromote){
-        return chatByHttp(content, systemPromote, qwenUrl, "qwen-plus", qwenApiKey);
+    public String chatToQwen(String content, String systemPromote, String model){
+        return chatByHttp(content, systemPromote, qwenUrl, model==null?"qwen-plus":model, qwenApiKey);
     }
 
-    public String chatToDoubao(String content, String systemPromote){
-        return chatByHttp(content, systemPromote, doubaoUrl, "doubao-pro-256k-241115", doubaoApiKey);
+    public String chatToAiByConfig(String content, String systemPromote){
+        ModelConfig config = modelConfigRepository.getOne(new LambdaQueryWrapper<ModelConfig>().eq(ModelConfig::isSelected, true));
+        if("ALIYUN".equals(config.getModelType())){
+            return chatToQwen(content,systemPromote,config.getModel());
+        } else if ("BYTEDANCE".equals(config.getModelType())) {
+            return chatToDoubao(content, systemPromote, config.getModel());
+        }else {
+            return chatToDoubao(content, systemPromote, null);
+        }
+    }
+
+    public String chatToDoubao(String content, String systemPromote, String model){
+        return chatByHttp(content, systemPromote, doubaoUrl, model==null?"doubao-pro-256k-241115":model, doubaoApiKey);
     }
 
 
