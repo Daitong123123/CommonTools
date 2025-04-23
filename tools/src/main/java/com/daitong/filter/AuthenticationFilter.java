@@ -15,7 +15,7 @@ import java.io.IOException;
 
 public class AuthenticationFilter implements Filter {
 
-    private static final String[] WHITELIST = {"/login", "/register", "/phone-binding","/admin"};
+    private static final String[] WHITELIST = {"/login", "/register", "/phone-binding","/admin","/chat-websocket"};
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
