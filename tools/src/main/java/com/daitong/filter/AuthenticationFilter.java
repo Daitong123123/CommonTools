@@ -2,6 +2,7 @@ package com.daitong.filter;
 
 import com.daitong.manager.SessionManager;
 import com.daitong.manager.UserManager;
+import lombok.extern.log4j.Log4j2;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@Log4j2
 public class AuthenticationFilter implements Filter {
 
     private static final String[] WHITELIST = {"/login", "/register", "/phone-binding","/admin","/chat-websocket"};
@@ -25,6 +27,7 @@ public class AuthenticationFilter implements Filter {
         String requestURI = httpRequest.getRequestURI();
         // 检查请求的 URL 是否在白名单中
         for (String url : WHITELIST) {
+            log.info("request in whitelist,requestURI {}", requestURI);
             if (requestURI.startsWith(url)) {
                 chain.doFilter(request, response);
                 return;

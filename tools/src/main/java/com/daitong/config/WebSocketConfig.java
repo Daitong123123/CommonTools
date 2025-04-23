@@ -41,14 +41,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
         @Override
         public boolean doHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) {
-            if (request instanceof ServletServerHttpRequest) {
-                ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
-                HttpServletRequest httpRequest = servletRequest.getServletRequest();
-                String userId = httpRequest.getParameter("userId");
-                if (userId != null) {
-                    attributes.put("userId", userId);
-                }
-            }
+
             return defaultHandler.doHandshake(request, response, wsHandler, attributes);
         }
     }
