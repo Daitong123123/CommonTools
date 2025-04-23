@@ -1,5 +1,6 @@
 package com.daitong.config;
 
+import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -17,6 +18,7 @@ import java.util.Map;
 
 @Configuration
 @EnableWebSocketMessageBroker
+@Log4j2
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 
@@ -41,7 +43,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
         @Override
         public boolean doHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) {
-
+            log.info("request:{},response:{},wsHandler:{},attributes:{}", request, response,wsHandler,attributes);
             return defaultHandler.doHandshake(request, response, wsHandler, attributes);
         }
     }
