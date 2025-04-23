@@ -17,12 +17,7 @@ public class CustomOriginInterceptor extends OriginHandshakeInterceptor {
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-        HttpHeaders headers = request.getHeaders();
-        String origin = headers.getOrigin();
-        if (origin != null && ALLOWED_ORIGINS.contains(origin)) {
-            return true;
-        }
-        return false;
+        return true;
     }
 
     @Override
