@@ -184,6 +184,7 @@ public class ChatController {
         records.sort(Comparator.comparing(ChatRecord::getCreatedAt));
         MessageResponse messageResponse = new MessageResponse();
         messageResponse.setTotal(records.size());
+        getMessageRequest.setCurPage(0);
         if (getMessageRequest.getCurPage() == null
                 || getMessageRequest.getPageSize() == null
                 || getMessageRequest.getCurPage() == 0
