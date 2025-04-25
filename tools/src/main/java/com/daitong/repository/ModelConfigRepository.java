@@ -2,8 +2,6 @@ package com.daitong.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.daitong.manager.UserManager;
-import com.daitong.repository.entity.CookBookLikes;
 import com.daitong.repository.entity.ModelConfig;
 import com.daitong.repository.mapper.ModelConfigMapper;
 import org.springframework.beans.factory.annotation.Autowired;
