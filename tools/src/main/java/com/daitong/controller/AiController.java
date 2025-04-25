@@ -10,9 +10,12 @@ import com.daitong.bo.aichat.*;
 import com.daitong.bo.common.CommonResponse;
 import com.daitong.bo.common.PageRequest;
 import com.daitong.constants.Promotes;
+import com.daitong.manager.IdManager;
 import com.daitong.manager.UserManager;
+import com.daitong.repository.CookBookCacheRepository;
 import com.daitong.repository.CookBookLikesRepository;
 import com.daitong.repository.DishDisappearRepository;
+import com.daitong.repository.entity.CookBookCache;
 import com.daitong.repository.entity.CookBookLikes;
 import com.daitong.repository.entity.DishDisappear;
 import com.daitong.service.AiChatService;
@@ -25,8 +28,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @RestController
@@ -41,6 +46,9 @@ public class AiController {
 
     @Autowired
     private CookBookLikesRepository cookBookLikesRepository;
+
+    @Autowired
+    private CookBookCacheRepository cookBookCacheRepository;
 
 
     @PostMapping("/chat")
@@ -138,14 +146,47 @@ public class AiController {
         DishResponse dishResponse = new DishResponse();
         DishResult dishResult = new DishResult();
         dishList.add(dishResult);
-        String content = String.format(Promotes.DISH_RECOMMEND_USER, dishRequest.getDishType(), dishRequest.getDishNumber(), dishRequest.getDishTaste(),
-                dishRequest.getComplex(),dishRequest.getPreference(),JSONObject.toJSONString(dishList));
+        List<CookBookCache> cookBookCaches = cookBookCacheRepository.findDishInCache(dishRequest.getComplexStart(), dishRequest.getComplexEnd(),
+                dishRequest.getPreference(), dishRequest.getDishTaste());
+        int cacheDishNumber = 0;
+        if(CollectionUtils.isNotEmpty(cookBookCaches)){
+            cacheDishNumber = cookBookCaches.size();
+        }
+        if(cookBookCaches.size() >= dishRequest.getDishNumber()){
+            cookBookCaches = selectRandomElements(cookBookCaches, dishRequest.getDishNumber());
+        }
+        String content = String.format(Promotes.DISH_RECOMMEND_USER, dishRequest.getDishType(), dishRequest.getDishNumber() - cacheDishNumber, dishRequest.getDishTaste(),
+                getComplex(dishRequest.getComplexStart(),dishRequest.getComplexEnd()),dishRequest.getPreference(),JSONObject.toJSONString(dishList));
         try{
             dishResponse.setCode("200");
             dishResponse.setMessage("请求成功");
-            String result = aiChatService.chatToAiByConfig(content, Promotes.DISH_RECOMMEND_SYS);
-            log.info("result:"+result);
-            dishResponse.setData(JSONObject.parseArray(result, DishResult.class));
+            if(cacheDishNumber < dishRequest.getDishNumber()){
+                List<String> cacheNames = cookBookCaches.stream().map(CookBookCache::getDishName).collect(Collectors.toList());
+                //屏蔽缓存的菜
+                content = setIgnoreDish(cacheNames, content);
+                String result = aiChatService.chatToAiByConfig(content, Promotes.DISH_RECOMMEND_SYS);
+                List<DishResult> aiResults = JSONObject.parseArray(result, DishResult.class);
+                List<CookBookCache> aiData = aiResults.stream().map(re -> {
+                    CookBookCache cookBookCache = new CookBookCache();
+                    cookBookCache.setComplex(Integer.parseInt(re.getComplex()));
+                    cookBookCache.setDishCost(re.getDishCost());
+                    cookBookCache.setDishStep(re.getDishStep());
+                    cookBookCache.setDishEffect(re.getDishEffect());
+                    cookBookCache.setDishFrom(dishRequest.getDishTaste());
+                    cookBookCache.setDishName(re.getDishName());
+                    cookBookCache.setId(IdManager.getId());
+                    cookBookCache.setTasty(dishRequest.getPreference());
+                    cookBookCache.setDishIngredients(re.getDishIngredients());
+                    return cookBookCache;
+                }).collect(Collectors.toList());
+                //保存ai生成的
+                cookBookCacheRepository.saveBatch(aiData);
+                log.info("result:"+result);
+                //合并缓存列表和生成的列表
+                cookBookCaches.addAll(aiData);
+            }
+
+            dishResponse.setData(cookBookCaches);
             return dishResponse;
         }catch (Exception e){
             log.error("请求失败", e);
@@ -153,6 +194,41 @@ public class AiController {
             dishResponse.setMessage(e.getMessage());
         }
         return dishResponse;
+    }
+
+    public String setIgnoreDish(List<String> cacheNames, String content){
+        if(CollectionUtils.isNotEmpty(cacheNames)){
+            StringBuilder stringBuilder = new StringBuilder(content);
+            stringBuilder.append("请不要推荐下面些菜名的菜");
+            cacheNames.forEach(dish-> stringBuilder.append(dish).append(" "));
+            stringBuilder.append("。");
+            return stringBuilder.toString();
+        }
+        return content;
+    }
+
+
+
+    public static List<CookBookCache> selectRandomElements(List<CookBookCache> cookBookCaches, int n) {
+        List<CookBookCache> shuffledList = new ArrayList<>(cookBookCaches);
+        Collections.shuffle(shuffledList, new Random());
+        return shuffledList.subList(0, n);
+    }
+
+    private String getComplex(Integer startComplex, Integer endComplex){
+        if(startComplex == null && endComplex == null){
+            return "1星到10星(包含1星和10星)";
+        }
+        if(startComplex == null){
+            return  endComplex+"星及"+endComplex+"星以下";
+        }
+        if(endComplex == null){
+            return  startComplex+"星及"+startComplex+"星以上";
+        }
+        if(startComplex.equals(endComplex)){
+            return  startComplex+"星";
+        }
+        return startComplex+"星和"+endComplex+"星之间(包含边界)";
     }
 
     @PostMapping("/query-likes")

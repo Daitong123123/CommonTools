@@ -7,8 +7,9 @@ import lombok.ToString;
 @ToString
 public class DishRequest {
     private String dishType ;
-    private String dishNumber ;
+    private Integer dishNumber ;
     private String dishTaste ;
-    private String complex;
+    private Integer complexStart;
+    private Integer complexEnd;
     private String preference;
 }

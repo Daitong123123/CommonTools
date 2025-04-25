@@ -10,4 +10,6 @@ public class DishResult {
     private String complex = "";
     private String dishStep = "";
     private String dishEffect = "";
+    private String dishIngredients = "";
+    private String dishCost = "";
 }
