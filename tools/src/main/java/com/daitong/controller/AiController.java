@@ -7,16 +7,17 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.daitong.bo.aichat.CookBookLikesResponse;
 import com.daitong.bo.aichat.*;
+import com.daitong.bo.common.BaseResponse;
 import com.daitong.bo.common.CommonResponse;
 import com.daitong.bo.common.PageRequest;
 import com.daitong.constants.Promotes;
 import com.daitong.manager.IdManager;
 import com.daitong.manager.UserManager;
 import com.daitong.repository.CookBookCacheRepository;
-import com.daitong.repository.CookBookLikesRepository;
+import com.daitong.repository.CookBookPreferenceRepository;
 import com.daitong.repository.DishDisappearRepository;
 import com.daitong.repository.entity.CookBookCache;
-import com.daitong.repository.entity.CookBookLikes;
+import com.daitong.repository.entity.CookBookPreference;
 import com.daitong.repository.entity.DishDisappear;
 import com.daitong.service.AiChatService;
 import lombok.extern.log4j.Log4j2;
@@ -27,11 +28,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -45,7 +42,7 @@ public class AiController {
     private DishDisappearRepository dishDisappearRepository;
 
     @Autowired
-    private CookBookLikesRepository cookBookLikesRepository;
+    private CookBookPreferenceRepository cookBookPreferenceRepository;
 
     @Autowired
     private CookBookCacheRepository cookBookCacheRepository;
@@ -74,13 +71,17 @@ public class AiController {
             commonResponse.setCode("200");
             commonResponse.setMessage("请求成功");
             Date now = new Date();
-            unlikeRequest.getUnlikes().forEach(s->{
-                DishDisappear dishDisappear = new DishDisappear();
-                dishDisappear.setDishName(s);
-                dishDisappear.setUserId(UserManager.getCurrentUser().getUserId());
-                dishDisappear.setCreatedAt(now);
-                dishDisappearRepository.save(dishDisappear);
-            });
+            List<CookBookPreference> toInsert = unlikeRequest.getUnlikes().stream().filter(unlike->!cookBookPreferenceRepository.isUnLike(unlike)).map(s -> {
+                CookBookPreference cookBookPreference = new CookBookPreference();
+                cookBookPreference.setId(IdManager.getIdString());
+                cookBookPreference.setDishId(s);
+                cookBookPreference.setUserId(UserManager.getCurrentUser().getUserId());
+                cookBookPreference.setIsLike(false);
+                cookBookPreference.setUpdatedAt(now);
+                cookBookPreference.setCreatedAt(now);
+                return cookBookPreference;
+            }).collect(Collectors.toList());
+            cookBookPreferenceRepository.saveBatch(toInsert);
             return commonResponse;
         }catch (Exception e){
             log.error("请求失败", e);
@@ -96,12 +97,11 @@ public class AiController {
         try{
             commonResponse.setCode("200");
             commonResponse.setMessage("请求成功");
-            unlikeRequest.getUnlikes().forEach(s->{
-                QueryWrapper<DishDisappear> queryWrapper = new QueryWrapper<>();
-                queryWrapper.lambda().eq(DishDisappear::getDishName, s)
-                        .eq(DishDisappear::getUserId, UserManager.getCurrentUser().getUserId());
-                dishDisappearRepository.remove(queryWrapper);
-            });
+            List<Long> cancleList = unlikeRequest.getUnlikes().stream().map(Long::parseLong).collect(Collectors.toList());
+            cookBookPreferenceRepository.remove(new QueryWrapper<CookBookPreference>().lambda()
+                    .eq(CookBookPreference::getIsLike, false)
+                    .eq(CookBookPreference::getUserId, UserManager.getCurrentUser().getUserId())
+                    .in(CookBookPreference::getDishId, cancleList));
             return commonResponse;
         }catch (Exception e){
             log.error("请求失败", e);
@@ -117,20 +117,16 @@ public class AiController {
         try{
             unlikeResponse.setCode("200");
             unlikeResponse.setMessage("请求成功");
-           List<DishDisappear> list = dishDisappearRepository.getUnlikes();
-            unlikeResponse.setTotal(CollectionUtils.isEmpty(list)?0:list.size());
+            List<String> unLikesId = Optional.ofNullable(cookBookPreferenceRepository.getUnLikesId()).orElse(new ArrayList<>());
+            unlikeResponse.setTotal(unLikesId.size());
             unlikeResponse.setCurPage(pageRequest.getCurPage());
             unlikeResponse.setPageSize(pageRequest.getPageSize());
-            if(CollectionUtils.isEmpty(list)){
-                unlikeResponse.setUnlikes(new ArrayList<>());
-            }else {
-                List<String> unlikes = list.stream()
-                        .skip((long) (pageRequest.getCurPage() - 1) * pageRequest.getPageSize())
-                        .limit(pageRequest.getPageSize())
-                        .map(DishDisappear::getDishName)
-                        .collect(Collectors.toList());
-                unlikeResponse.setUnlikes(unlikes);
-            }
+            List<String> dishName = cookBookCacheRepository.selectObjs("dish_name", unLikesId).stream()
+                    .map(String::valueOf)
+                    .skip((long) (pageRequest.getCurPage() - 1) * pageRequest.getPageSize())
+                    .limit(pageRequest.getPageSize())
+                    .collect(Collectors.toList());
+            unlikeResponse.setUnlikes(dishName);
             return unlikeResponse;
         }catch (Exception e){
             log.error("请求失败", e);
@@ -174,9 +170,11 @@ public class AiController {
                     cookBookCache.setDishEffect(re.getDishEffect());
                     cookBookCache.setDishFrom(dishRequest.getDishTaste());
                     cookBookCache.setDishName(re.getDishName());
-                    cookBookCache.setId(IdManager.getId());
+                    cookBookCache.setId(IdManager.getIdString());
                     cookBookCache.setTasty(dishRequest.getPreference());
                     cookBookCache.setDishIngredients(re.getDishIngredients());
+                    cookBookCache.setCreatedAt(new Date());
+                    cookBookCache.setUpdatedAt(new Date());
                     return cookBookCache;
                 }).collect(Collectors.toList());
                 //保存ai生成的
@@ -237,16 +235,24 @@ public class AiController {
         try{
             cookBookLikesResponse.setCode("200");
             cookBookLikesResponse.setMessage("请求成功");
-            Page<CookBookLikes> page = new Page<>(queryLikesRequest.getCurPage(), queryLikesRequest.getPageSize());
-            IPage<CookBookLikes> list = cookBookLikesRepository.page(page,new QueryWrapper<CookBookLikes>()
-                    .lambda().eq(CookBookLikes::getUserId, UserManager.getCurrentUser().getUserId())
-                    .eq(StringUtils.isNotEmpty(queryLikesRequest.getDishFrom()), CookBookLikes::getDishFrom, queryLikesRequest.getDishFrom())
-                    .eq(StringUtils.isNotEmpty(queryLikesRequest.getComplex()), CookBookLikes::getComplex, queryLikesRequest.getComplex())
-                    .eq(StringUtils.isNotEmpty(queryLikesRequest.getTasty()), CookBookLikes::getTasty, queryLikesRequest.getTasty()));
-            cookBookLikesResponse.setTotal((int) list.getTotal());
+
+            List<String> likeIds = cookBookPreferenceRepository.getLikesId();
+            List<CookBookCache> cookList = CollectionUtils.isEmpty(likeIds)?Collections.emptyList():cookBookCacheRepository.list(
+                    new QueryWrapper<CookBookCache>()
+                            .lambda()
+                            .in(CookBookCache::getId, likeIds)
+                            .eq(StringUtils.isNotEmpty(queryLikesRequest.getDishFrom()), CookBookCache::getDishFrom, queryLikesRequest.getDishFrom())
+                            .eq(StringUtils.isNotEmpty(queryLikesRequest.getTasty()), CookBookCache::getTasty, queryLikesRequest.getTasty())
+                            .eq(StringUtils.isNotEmpty(queryLikesRequest.getComplex()), CookBookCache::getComplex, queryLikesRequest.getComplex())
+            );
+            cookBookLikesResponse.setTotal(cookList.size());
             cookBookLikesResponse.setCurPage(queryLikesRequest.getCurPage());
             cookBookLikesResponse.setPageSize(queryLikesRequest.getPageSize());
-            cookBookLikesResponse.setCookBookLikesList(list.getRecords());
+            List<CookBookCache> cookLikes = cookList.stream().skip((long) (queryLikesRequest.getCurPage() - 1) * queryLikesRequest.getPageSize())
+                    .limit(queryLikesRequest.getPageSize())
+                    .collect(Collectors.toList());
+
+            cookBookLikesResponse.setCookBookLikesList(cookLikes);
             return cookBookLikesResponse;
         }catch (Exception e){
             log.error("请求失败", e);
@@ -262,10 +268,10 @@ public class AiController {
         try{
             cookBookLikesResponse.setCode("200");
             cookBookLikesResponse.setMessage("请求成功");
-
-            List<String> dishFromList = cookBookLikesRepository.selectObjs("dish_from").stream().map(String::valueOf).collect(Collectors.toList());
-            List<String> compelxList = cookBookLikesRepository.selectObjs("complex").stream().map(String::valueOf).collect(Collectors.toList());
-            List<String> tastyList = cookBookLikesRepository.selectObjs("tasty").stream().map(String::valueOf).collect(Collectors.toList());
+            List<String> likesId = cookBookPreferenceRepository.getLikesId();
+            List<String> dishFromList = cookBookCacheRepository.selectObjs("dish_from", likesId).stream().map(String::valueOf).collect(Collectors.toList());
+            List<String> compelxList = cookBookCacheRepository.selectObjs("complex", likesId).stream().map(String::valueOf).collect(Collectors.toList());
+            List<String> tastyList = cookBookCacheRepository.selectObjs("tasty", likesId).stream().map(String::valueOf).collect(Collectors.toList());
             cookBookLikesResponse.setCompelxList(compelxList);
             cookBookLikesResponse.setTastyList(tastyList);
             cookBookLikesResponse.setDishFromList(dishFromList);
@@ -284,10 +290,14 @@ public class AiController {
         try{
             commonResponse.setCode("200");
             commonResponse.setMessage("请求成功");
-            cookBookLikeRequest.getCookBook().setUserId(UserManager.getCurrentUser().getUserId());
-            cookBookLikeRequest.getCookBook().setCreatedAt(new Date());
-            cookBookLikeRequest.getCookBook().setUpdatedAt(new Date());
-            cookBookLikesRepository.save(cookBookLikeRequest.getCookBook());
+            CookBookPreference cookBookPreference = new CookBookPreference();
+            cookBookPreference.setId(IdManager.getIdString());
+            cookBookPreference.setDishId(cookBookLikeRequest.getDishId());
+            cookBookPreference.setIsLike(true);
+            cookBookPreference.setUserId(UserManager.getCurrentUser().getUserId());
+            cookBookPreference.setUpdatedAt(new Date());
+            cookBookPreference.setCreatedAt(new Date());
+            cookBookPreferenceRepository.save(cookBookPreference);
             return commonResponse;
         }catch (Exception e){
             log.error("请求失败", e);
@@ -298,12 +308,17 @@ public class AiController {
     }
 
     @PostMapping("/delete-likes")
-    public CommonResponse deleteLikes(@RequestBody List<Long> deleteList){
+    public CommonResponse deleteLikes(@RequestBody List<String> deleteList){
         CommonResponse commonResponse = new CommonResponse();
         try{
             commonResponse.setCode("200");
             commonResponse.setMessage("请求成功");
-            cookBookLikesRepository.removeByIds(deleteList);
+            QueryWrapper<CookBookPreference> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda()
+                    .eq(CookBookPreference::getUserId, UserManager.getCurrentUser().getUserId())
+                    .eq(CookBookPreference::getIsLike, true)
+                    .in(CookBookPreference::getDishId, deleteList);
+            cookBookPreferenceRepository.remove(queryWrapper);
             return commonResponse;
         }catch (Exception e){
             log.error("请求失败", e);
@@ -311,6 +326,23 @@ public class AiController {
             commonResponse.setMessage(e.getMessage());
         }
         return commonResponse;
+    }
+
+    @GetMapping("/isLike")
+    public BaseResponse isLike(String dishId){
+        BaseResponse baseResponse = new BaseResponse();
+        try{
+            baseResponse.setCode("200");
+            baseResponse.setMessage("请求成功");
+            baseResponse.setData(cookBookPreferenceRepository.isLike(dishId));
+            return baseResponse;
+        }catch (Exception e){
+            log.error("请求失败", e);
+            baseResponse.setCode("500");
+            baseResponse.setData(false);
+            baseResponse.setMessage(e.getMessage());
+        }
+        return baseResponse;
     }
 
 

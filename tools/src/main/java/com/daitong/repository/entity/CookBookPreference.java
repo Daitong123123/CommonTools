@@ -10,24 +10,16 @@ import java.util.Date;
 
 @Data
 @ToString
-@TableName("cook_book_likes")
-public class CookBookLikes {
+@TableName("cook_book_preference")
+public class CookBookPreference {
     @TableId(value = "id", type = IdType.INPUT)
-    private Long id;
+    private String id;
 
-    private String dishFrom;
+    private String dishId;
 
     private String userId;
 
-    private String complex;
-
-    private String tasty;
-
-    private String dishName;
-
-    private String dishStep;
-
-    private String dishEffect;
+    private Boolean isLike;
 
     private Date createdAt;
 

@@ -10,4 +10,8 @@ public class IdManager {
         long leastSignificantBits = uuid.getLeastSignificantBits();
         return (mostSignificantBits ^ leastSignificantBits) & Long.MAX_VALUE;
     }
+
+    public static String getIdString(){
+        return String.valueOf(getId());
+    }
 }

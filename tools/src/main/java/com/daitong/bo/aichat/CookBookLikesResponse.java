@@ -1,7 +1,7 @@
 package com.daitong.bo.aichat;
 
 import com.daitong.bo.common.PageResponse;
-import com.daitong.repository.entity.CookBookLikes;
+import com.daitong.repository.entity.CookBookCache;
 import lombok.Data;
 import lombok.ToString;
 
@@ -11,5 +11,5 @@ import java.util.List;
 @ToString
 public class CookBookLikesResponse extends PageResponse {
 
-    private List<CookBookLikes> cookBookLikesList;
+    private List<CookBookCache> cookBookLikesList;
 }

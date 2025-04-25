@@ -14,7 +14,7 @@ import java.util.Date;
 public class CookBookCache {
 
     @TableId(value = "id", type = IdType.INPUT)
-    private Long id;
+    private String id;
 
     private String dishFrom;
 
