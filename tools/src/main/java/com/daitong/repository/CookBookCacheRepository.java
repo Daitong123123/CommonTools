@@ -2,6 +2,7 @@ package com.daitong.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.daitong.bo.aichat.LikeOption;
 import com.daitong.repository.entity.CookBookCache;
 import com.daitong.repository.mapper.CookBookCacheMapper;
 import org.apache.commons.collections4.CollectionUtils;
@@ -12,8 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static javax.management.Query.eq;
 
 @Repository
 public class CookBookCacheRepository extends ServiceImpl<CookBookCacheMapper, CookBookCache> {
@@ -35,6 +34,21 @@ public class CookBookCacheRepository extends ServiceImpl<CookBookCacheMapper, Co
         queryWrapper.select("DISTINCT "+colName);
         // 执行查询，返回不重复的 dish_from 列表
         return cookBookCacheMapper.selectObjs(queryWrapper);
+    }
+
+    public List<LikeOption> likeOptions(List<String> ids){
+        if (ids == null || ids.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        QueryWrapper<CookBookCache> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .in(CookBookCache::getId, ids);
+        return list(queryWrapper).stream().map(cookBookCache -> {
+            LikeOption likeOption = new LikeOption();
+            likeOption.setDishId(cookBookCache.getId());
+            likeOption.setDishName(cookBookCache.getDishName());
+            return likeOption;
+        }).collect(Collectors.toList());
     }
 
     public List<CookBookCache> findDishInCache(Integer startComplex, Integer endComplex, String tasty, String dishFrom){

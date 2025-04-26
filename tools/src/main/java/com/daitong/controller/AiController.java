@@ -262,6 +262,40 @@ public class AiController {
         return cookBookLikesResponse;
     }
 
+    @GetMapping("/query-likes-name")
+    public BaseResponse queryLikesName(){
+        BaseResponse baseResponse = new BaseResponse();
+        try{
+            baseResponse.setCode("200");
+            baseResponse.setMessage("请求成功");
+            List<String> likeIds = cookBookPreferenceRepository.getLikesId();
+            baseResponse.setData(cookBookCacheRepository.likeOptions(likeIds));
+            cookBookCacheRepository.likeOptions(likeIds);
+            return baseResponse;
+        }catch (Exception e){
+            log.error("请求失败", e);
+            baseResponse.setCode("500");
+            baseResponse.setMessage(e.getMessage());
+        }
+        return baseResponse;
+    }
+
+    @GetMapping("/query-dish-by-id")
+    public BaseResponse getDishDetailById(String dishId){
+        BaseResponse baseResponse = new BaseResponse();
+        try{
+            baseResponse.setCode("200");
+            baseResponse.setMessage("请求成功");
+            baseResponse.setData(cookBookCacheRepository.getById(dishId));
+            return baseResponse;
+        }catch (Exception e){
+            log.error("请求失败", e);
+            baseResponse.setCode("500");
+            baseResponse.setMessage(e.getMessage());
+        }
+        return baseResponse;
+    }
+
     @GetMapping("/query-likes-options")
     public CookBookLikesOptionsResponse queryLikesOptions(){
         CookBookLikesOptionsResponse cookBookLikesResponse = new CookBookLikesOptionsResponse();
