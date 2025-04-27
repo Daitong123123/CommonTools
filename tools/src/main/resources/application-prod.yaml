@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://rm-bp1k20rmi470q8div1o.mysql.rds.aliyuncs.com:3306/daitong?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://rm-bp1k20rmi470q8div1o.mysql.rds.aliyuncs.com:3306/daitong?useSSL=false&serverTimezone=UTC&characterSetResults=utf8mb4
     username: daitong
     password: Daitong@3344
     driver-class-name: com.mysql.cj.jdbc.Driver
