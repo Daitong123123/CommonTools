@@ -1,5 +1,6 @@
 package com.daitong.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.daitong.bo.common.CommonResponse;
 import com.daitong.bo.message.FriendInfoResponse;
@@ -12,9 +13,11 @@ import com.daitong.bo.message.GetMessageRequest;
 import com.daitong.bo.message.MessageResponse;
 import com.daitong.bo.message.SendMessageRequest;
 import com.daitong.repository.ChatRecordRepository;
+import com.daitong.repository.CookBookCacheRepository;
 import com.daitong.repository.FriendShipRepository;
 import com.daitong.repository.UserRepository;
 import com.daitong.repository.entity.ChatRecord;
+import com.daitong.repository.entity.CookBookCache;
 import com.daitong.repository.entity.FriendShip;
 import com.daitong.repository.entity.UserEntity;
 import com.daitong.service.ChatService;
@@ -41,6 +44,9 @@ public class ChatController {
     private FriendShipRepository friendShipRepository;
 
     @Autowired
+    private CookBookCacheRepository cookBookCacheRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -61,6 +67,45 @@ public class ChatController {
             commonResponse.setMessage(e.getMessage());
         }
         return commonResponse;
+    }
+
+    @PostMapping("/message-query")
+    public MessageResponse getMessageHistory(@RequestBody GetMessageRequest getMessageRequest) {
+        QueryWrapper<ChatRecord> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(ChatRecord::getUserIdFrom, getMessageRequest.getUserIdFrom())
+                .eq(ChatRecord::getUserIdTo, getMessageRequest.getUserIdTo());
+        List<ChatRecord> records = chatRecordRepository.list(queryWrapper);
+        QueryWrapper<ChatRecord> queryWrapper2 = new QueryWrapper<>();
+        queryWrapper2.lambda()
+                .eq(ChatRecord::getUserIdFrom, getMessageRequest.getUserIdTo())
+                .eq(ChatRecord::getUserIdTo, getMessageRequest.getUserIdFrom());
+        List<ChatRecord> records2 = chatRecordRepository.list(queryWrapper2);
+        records.addAll(records2);
+        records = records.stream().peek(chatRecord -> {
+            if("cookBook".equals(chatRecord.getMessageType())){
+                CookBookCache cookBookCache = cookBookCacheRepository.getById(chatRecord.getMessage());
+                chatRecord.setMessage(JSONObject.toJSONString(cookBookCache));
+            }
+        }).collect(Collectors.toList());
+        records.sort(Comparator.comparing(ChatRecord::getCreatedAt));
+        MessageResponse messageResponse = new MessageResponse();
+        messageResponse.setTotal(records.size());
+        getMessageRequest.setCurPage(0);
+        if (getMessageRequest.getCurPage() == null
+                || getMessageRequest.getPageSize() == null
+                || getMessageRequest.getCurPage() == 0
+                || getMessageRequest.getPageSize() == 0) {
+            messageResponse.setRecords(records);
+        } else {
+            messageResponse.setRecords(records.stream()
+                    .skip((long) (getMessageRequest.getCurPage() - 1) * getMessageRequest.getPageSize())
+                    .limit(getMessageRequest.getPageSize()).collect(Collectors.toList()));
+        }
+
+        messageResponse.setCurPage(getMessageRequest.getCurPage());
+        messageResponse.setPageSize(getMessageRequest.getPageSize());
+        return messageResponse;
     }
 
     @PostMapping("/friend-request")
@@ -168,38 +213,7 @@ public class ChatController {
         return friendToBeResponse;
     }
 
-    @PostMapping("/message-query")
-    public MessageResponse getMessageHistory(@RequestBody GetMessageRequest getMessageRequest) {
-        QueryWrapper<ChatRecord> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .eq(ChatRecord::getUserIdFrom, getMessageRequest.getUserIdFrom())
-                .eq(ChatRecord::getUserIdTo, getMessageRequest.getUserIdTo());
-        List<ChatRecord> records = chatRecordRepository.list(queryWrapper);
-        QueryWrapper<ChatRecord> queryWrapper2 = new QueryWrapper<>();
-        queryWrapper2.lambda()
-                .eq(ChatRecord::getUserIdFrom, getMessageRequest.getUserIdTo())
-                .eq(ChatRecord::getUserIdTo, getMessageRequest.getUserIdFrom());
-        List<ChatRecord> records2 = chatRecordRepository.list(queryWrapper2);
-        records.addAll(records2);
-        records.sort(Comparator.comparing(ChatRecord::getCreatedAt));
-        MessageResponse messageResponse = new MessageResponse();
-        messageResponse.setTotal(records.size());
-        getMessageRequest.setCurPage(0);
-        if (getMessageRequest.getCurPage() == null
-                || getMessageRequest.getPageSize() == null
-                || getMessageRequest.getCurPage() == 0
-                || getMessageRequest.getPageSize() == 0) {
-            messageResponse.setRecords(records);
-        } else {
-            messageResponse.setRecords(records.stream()
-                    .skip((long) (getMessageRequest.getCurPage() - 1) * getMessageRequest.getPageSize())
-                    .limit(getMessageRequest.getPageSize()).collect(Collectors.toList()));
-        }
 
-        messageResponse.setCurPage(getMessageRequest.getCurPage());
-        messageResponse.setPageSize(getMessageRequest.getPageSize());
-        return messageResponse;
-    }
 
     @PostMapping("/friend-ship")
     public FriendShipResponse getMyFriends(@RequestBody FriendShipRequest friendShipRequest) {

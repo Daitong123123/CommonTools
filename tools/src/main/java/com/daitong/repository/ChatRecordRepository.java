@@ -20,7 +20,7 @@ public class ChatRecordRepository extends ServiceImpl<ChatRecordMapper, ChatReco
         chatRecord.setUpdatedAt(new Date());
         chatRecord.setUserIdFrom(request.getUserIdFrom());
         chatRecord.setUserIdTo(request.getUserIdTo());
-        chatRecord.setMessageType("text");
+        chatRecord.setMessageType(request.getMessageType());
         this.save(chatRecord);
     }
 
