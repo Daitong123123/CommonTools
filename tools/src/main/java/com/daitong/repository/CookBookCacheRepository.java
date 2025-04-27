@@ -55,7 +55,7 @@ public class CookBookCacheRepository extends ServiceImpl<CookBookCacheMapper, Co
         QueryWrapper<CookBookCache> queryWrapper = new QueryWrapper<>();
         List<String> unlikeNames = getUnlikeNames();
         queryWrapper.lambda()
-                .gt(startComplex!=null,CookBookCache::getComplex, startComplex)
+                .ge(startComplex!=null,CookBookCache::getComplex, startComplex)
                 .le(endComplex!=null,CookBookCache::getComplex, endComplex)
                 .notIn(CollectionUtils.isNotEmpty(unlikeNames),CookBookCache::getDishName, unlikeNames)
                 .eq(CookBookCache::getTasty, tasty)
