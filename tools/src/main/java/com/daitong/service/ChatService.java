@@ -18,8 +18,18 @@ public class ChatService {
     public void sendMessage(SendMessageRequest messageRequest) {
         WebMessage webMessage = new WebMessage();
         webMessage.setType("newMessage");
+        webMessage.setSenderId(messageRequest.getUserIdFrom());
         webMessage.setContent(messageRequest.getMessageContent());
         simpMessagingTemplate.convertAndSend("/topic/" + messageRequest.getUserIdTo(), webMessage);
+    }
+
+    public void sendReadMessage(SendMessageRequest messageRequest) {
+        WebMessage webMessage = new WebMessage();
+        webMessage.setType("readMessage");
+        webMessage.setContent(messageRequest.getMessageContent());
+        webMessage.setSenderId(messageRequest.getUserIdFrom());
+        simpMessagingTemplate.convertAndSend("/topic/" + messageRequest.getUserIdTo(), webMessage);
+        simpMessagingTemplate.convertAndSend("/topic/" + messageRequest.getUserIdFrom(), webMessage);
     }
 
     public void sendFriendRequest(FriendToBeRequest friendToBeRequest) {

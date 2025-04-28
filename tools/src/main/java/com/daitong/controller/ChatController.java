@@ -1,6 +1,7 @@
 package com.daitong.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.daitong.bo.common.CommonResponse;
 import com.daitong.bo.message.FriendInfoResponse;
@@ -22,6 +23,7 @@ import com.daitong.repository.entity.FriendShip;
 import com.daitong.repository.entity.UserEntity;
 import com.daitong.service.ChatService;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -69,6 +71,32 @@ public class ChatController {
         return commonResponse;
     }
 
+    @PostMapping("/read-message")
+    public CommonResponse readMessage(@RequestBody SendMessageRequest messageRequest) {
+        CommonResponse commonResponse = new CommonResponse();
+        try {
+            commonResponse.setCode("200");
+            commonResponse.setMessage("请求成功");
+            List<ChatRecord> records = chatRecordRepository.list(new QueryWrapper<ChatRecord>()
+                    .eq("user_id_from", messageRequest.getUserIdFrom())
+                    .eq("user_id_to", messageRequest.getUserIdTo())
+                    .eq("is_read", false));
+            if (CollectionUtils.isNotEmpty(records)) {
+                records.forEach(record -> {
+                    record.setRead(true);
+                });
+                chatRecordRepository.updateBatchById(records);
+                chatService.sendReadMessage(messageRequest);
+            }
+            return commonResponse;
+        } catch (Exception e) {
+            log.error("请求失败", e);
+            commonResponse.setCode("500");
+            commonResponse.setMessage(e.getMessage());
+        }
+        return commonResponse;
+    }
+
     @PostMapping("/message-query")
     public MessageResponse getMessageHistory(@RequestBody GetMessageRequest getMessageRequest) {
         QueryWrapper<ChatRecord> queryWrapper = new QueryWrapper<>();
@@ -83,7 +111,7 @@ public class ChatController {
         List<ChatRecord> records2 = chatRecordRepository.list(queryWrapper2);
         records.addAll(records2);
         records = records.stream().peek(chatRecord -> {
-            if("cookBook".equals(chatRecord.getMessageType())){
+            if ("cookBook".equals(chatRecord.getMessageType())) {
                 CookBookCache cookBookCache = cookBookCacheRepository.getById(chatRecord.getMessage());
                 chatRecord.setMessage(JSONObject.toJSONString(cookBookCache));
             }
@@ -212,7 +240,6 @@ public class ChatController {
         }
         return friendToBeResponse;
     }
-
 
 
     @PostMapping("/friend-ship")

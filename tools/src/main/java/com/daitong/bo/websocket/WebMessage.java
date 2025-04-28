@@ -8,4 +8,5 @@ import lombok.ToString;
 public class WebMessage {
     private String type;
     private String content;
+    private String senderId;
 }
