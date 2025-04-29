@@ -21,6 +21,7 @@ public class ChatService {
         webMessage.setSenderId(messageRequest.getUserIdFrom());
         webMessage.setContent(messageRequest.getMessageContent());
         simpMessagingTemplate.convertAndSend("/topic/" + messageRequest.getUserIdTo(), webMessage);
+        simpMessagingTemplate.convertAndSend("/topic/" + messageRequest.getUserIdFrom(), webMessage);
     }
 
     public void sendReadMessage(SendMessageRequest messageRequest) {

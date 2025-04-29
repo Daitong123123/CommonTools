@@ -12,6 +12,6 @@ import java.util.List;
 public class RoomResponse extends CommonResponse {
 
     private String gameStatus;
-    private List<UserInfo> userInfos;
+    private List<String> userInfos;
     private Room room;
 }

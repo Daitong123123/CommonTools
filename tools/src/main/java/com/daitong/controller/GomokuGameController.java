@@ -1,12 +1,11 @@
 package com.daitong.controller;
 
-import com.daitong.bo.game.gomoku.CreateResponse;
-import com.daitong.bo.game.gomoku.GomokuEndResponse;
-import com.daitong.bo.game.gomoku.GomokuMoveResponse;
-import com.daitong.bo.game.gomoku.GomokuStartResponse;
-import com.daitong.bo.game.gomoku.JoinResponse;
-import com.daitong.bo.game.gomoku.Room;
-import com.daitong.bo.game.gomoku.RoomResponse;
+import com.alibaba.fastjson2.JSONObject;
+import com.daitong.bo.common.BaseResponse;
+import com.daitong.bo.game.gomoku.*;
+import com.daitong.bo.message.SendMessageRequest;
+import com.daitong.repository.ChatRecordRepository;
+import com.daitong.service.ChatService;
 import com.daitong.service.GomokuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +22,12 @@ public class GomokuGameController {
 
     @Autowired
     private GomokuService gomokuService;
+
+    @Autowired
+    private ChatService chatService;
+
+    @Autowired
+    private ChatRecordRepository chatRecordRepository;
 
     @PostMapping("/room/create")
     public CreateResponse createRoom(@RequestParam String userId) {
@@ -52,6 +57,22 @@ public class GomokuGameController {
             response.setSuccess(false);
         }
         return response;
+    }
+
+    @GetMapping("/invite")
+    public CreateResponse inviteGame(@RequestParam String userId, @RequestParam String friendId) {
+        CreateResponse createResponse = createRoom(userId);
+        SendMessageRequest sendMessageRequest = new SendMessageRequest();
+        sendMessageRequest.setUserIdFrom(userId);
+        sendMessageRequest.setUserIdTo(friendId);
+        sendMessageRequest.setMessageType("Gomoku");
+        GomokuInfo gomokuInfo = new GomokuInfo();
+        gomokuInfo.setInviteCode(createResponse.getInviteCode());
+        gomokuInfo.setRoomId(createResponse.getRoomId());
+        sendMessageRequest.setMessageContent(JSONObject.toJSONString(gomokuInfo));
+        chatRecordRepository.insertRecord(sendMessageRequest);
+        chatService.sendMessage(sendMessageRequest);
+        return createResponse;
     }
 
     @GetMapping("/room/status")
