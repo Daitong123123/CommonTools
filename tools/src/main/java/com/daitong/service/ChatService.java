@@ -2,9 +2,13 @@ package com.daitong.service;
 
 import com.daitong.bo.message.FriendToBeRequest;
 import com.daitong.bo.message.SendMessageRequest;
+import com.daitong.bo.websocket.GomokuMessage;
 import com.daitong.bo.websocket.WebMessage;
+import com.daitong.manager.UserManager;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ChatService {
@@ -22,6 +26,34 @@ public class ChatService {
         webMessage.setContent(messageRequest.getMessageContent());
         simpMessagingTemplate.convertAndSend("/topic/" + messageRequest.getUserIdTo(), webMessage);
         simpMessagingTemplate.convertAndSend("/topic/" + messageRequest.getUserIdFrom(), webMessage);
+    }
+
+    public void onGomokuJoin(String roomId) {
+        GomokuMessage message = new GomokuMessage();
+        message.setMessageType("onJoin");
+        simpMessagingTemplate.convertAndSend("/topic/gomoku/" + roomId, message);
+    }
+
+    public void onGomokuLeave(String roomId) {
+        GomokuMessage message = new GomokuMessage();
+        message.setMessageType("onLeave");
+        message.setUserId(UserManager.getCurrentUser().getUserId());
+        simpMessagingTemplate.convertAndSend("/topic/gomoku/" + roomId, message);
+    }
+
+    public void onGomokuStart(String roomId, String firstId) {
+        GomokuMessage message = new GomokuMessage();
+        message.setMessageType("onStart");
+        message.setUserId(firstId);
+        simpMessagingTemplate.convertAndSend("/topic/gomoku/" + roomId, message);
+    }
+
+    public void onGomokuMove(String roomId, String nextUserId, boolean hasWinner, String winnerId) {
+        GomokuMessage message = new GomokuMessage();
+        message.setMessageType("onMove");
+        message.setUserId(nextUserId);message.setHasWinner(hasWinner);
+        message.setWinnerId(winnerId);
+        simpMessagingTemplate.convertAndSend("/topic/gomoku/" + roomId, message);
     }
 
     public void sendReadMessage(SendMessageRequest messageRequest) {

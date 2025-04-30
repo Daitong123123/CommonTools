@@ -4,6 +4,7 @@ package com.daitong.service;
 import com.daitong.bo.game.gomoku.Room;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,17 +18,33 @@ public class GomokuService {
         String invitationCode = UUID.randomUUID().toString();
         Room room = new Room(roomId, invitationCode);
         room.getPlayerIds().add(userId);
+        room.setGameStatus("waiting");
         rooms.put(roomId, room);
         return invitationCode;
     }
 
     public String joinRoom(String userId, String invitationCode) {
         for (Room room : rooms.values()) {
-            if (room.getInvitationCode().equals(invitationCode) && room.getPlayerIds().size() < 2) {
-                room.getPlayerIds().add(userId);
-                return room.getRoomId();
+            if (room.getInvitationCode().equals(invitationCode) ) {
+                if(room.getPlayerIds().contains(userId)){
+                    return room.getRoomId();
+                }
+                if(room.getPlayerIds().size() < 2){
+                    room.getPlayerIds().add(userId);
+                    return room.getRoomId();
+                }
             }
         }
+        return null;
+    }
+
+    public String exitRoom(String userId, String roomId) {
+       Room room = rooms.get(roomId);
+       if(room.getPlayerIds().remove(userId)){
+           room.setGameStatus("ended");
+           room.setGameStarted(false);
+           return room.getRoomId();
+       }
         return null;
     }
 
@@ -38,7 +55,11 @@ public class GomokuService {
     public boolean startGame(String roomId) {
         Room room = rooms.get(roomId);
         if (room != null && room.getPlayerIds().size() == 2 && !room.isGameStarted()) {
+            for (int i = 0; i < room.getBoard().length; i++) {
+                Arrays.fill(room.getBoard()[i], 0);
+            }
             room.setGameStarted(true);
+            room.setGameStatus("playing");
             return true;
         }
         return false;
@@ -49,11 +70,11 @@ public class GomokuService {
         if (room != null && room.isGameStarted()) {
             // 简单检查落子位置是否合法
             if (room.getBoard()[x][y] == 0) {
-                int playerIndex = room.getPlayerIds().indexOf(userId);
-                room.getBoard()[x][y] = playerIndex + 1;
+                int playerValue = userId.equals(room.getBlackUserId())? 1:2;;
+                room.getBoard()[x][y] = playerValue;
 
                 // 判断是否有玩家获胜
-                if (checkWin(room.getBoard(), x, y, playerIndex + 1)) {
+                if (checkWin(room.getBoard(), x, y, playerValue)) {
                     room.setHasWinner(true);
                     room.setWinnerId(userId);
                     room.setGameStarted(false);
@@ -123,6 +144,7 @@ public class GomokuService {
         Room room = rooms.get(roomId);
         if (room != null && room.isGameStarted()) {
             room.setGameStarted(false);
+            room.setGameStatus("ended");
             return true;
         }
         return false;

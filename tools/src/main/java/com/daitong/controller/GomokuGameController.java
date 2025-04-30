@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 @RestController
@@ -29,7 +31,7 @@ public class GomokuGameController {
     @Autowired
     private ChatRecordRepository chatRecordRepository;
 
-    @PostMapping("/room/create")
+    @GetMapping("/room/create")
     public CreateResponse createRoom(@RequestParam String userId) {
         String invitationCode = gomokuService.createRoom(userId);
         CreateResponse response = new CreateResponse();
@@ -45,7 +47,7 @@ public class GomokuGameController {
         return response;
     }
 
-    @PostMapping("/room/join")
+    @GetMapping("/room/join")
     public JoinResponse joinRoom(@RequestParam String userId, @RequestParam String invitationCode) {
         String roomId = gomokuService.joinRoom(userId, invitationCode);
         JoinResponse response = new JoinResponse();
@@ -53,6 +55,22 @@ public class GomokuGameController {
             response.setRoomId(roomId);
             response.setSuccess(true);
             response.setPlayers(gomokuService.getRoomStatus(roomId).getPlayerIds());
+            chatService.onGomokuJoin(roomId);
+        } else {
+            response.setSuccess(false);
+        }
+        return response;
+    }
+
+    @GetMapping("/room/exit")
+    public JoinResponse exitRoom(@RequestParam String userId, @RequestParam String roomId) {
+        String id = gomokuService.exitRoom(userId, roomId);
+        JoinResponse response = new JoinResponse();
+        if (id != null) {
+            response.setRoomId(roomId);
+            response.setSuccess(true);
+            response.setPlayers(gomokuService.getRoomStatus(roomId).getPlayerIds());
+            chatService.onGomokuLeave(roomId);
         } else {
             response.setSuccess(false);
         }
@@ -78,36 +96,61 @@ public class GomokuGameController {
     @GetMapping("/room/status")
     public RoomResponse getRoomStatus(@RequestParam String roomId) {
         RoomResponse response = new RoomResponse();
-        response.setRoom(gomokuService.getRoomStatus(roomId));
+        Room room = gomokuService.getRoomStatus(roomId);
+        response.setGameStatus(room.getGameStatus());
+        response.setRoom(room);
         return response;
     }
 
-    @PostMapping("/game/start")
+    @GetMapping("/game/start")
     public GomokuStartResponse startGame(@RequestParam String roomId) {
         boolean result = gomokuService.startGame(roomId);
         GomokuStartResponse response = new GomokuStartResponse();
-        response.setFirstId("");
-        response.setSuccess(result);
+        if(result){
+            List<String> playerIds = gomokuService.getRoomStatus(roomId).getPlayerIds();
+            int randomIndex =ThreadLocalRandom.current().nextInt(playerIds.size());
+            response.setFirstId(playerIds.get(randomIndex));
+            response.setSuccess(true);
+            gomokuService.getRoomStatus(roomId).setBlackUserId(response.getFirstId());
+            chatService.onGomokuStart(roomId, response.getFirstId());
+        }else {
+            response.setSuccess(false);
+        }
         return response;
     }
 
-    @PostMapping("/game/move")
+    @GetMapping("/game/move")
     public GomokuMoveResponse makeMove(@RequestParam String roomId, @RequestParam String userId,
                                          @RequestParam int x, @RequestParam int y) {
         boolean result = gomokuService.makeMove(roomId, userId, x, y);
         GomokuMoveResponse response = new GomokuMoveResponse();
         response.setMoveSuccess( result);
+
         Room room = gomokuService.getRoomStatus(roomId);
+
         if (room.isHasWinner()) {
             response.setHasWinner( true);
             response.setWinnerId( room.getWinnerId());
+            room.setGameStatus("ended");
         } else {
             response.setHasWinner( false);
+        }
+        if(result){
+            chatService.onGomokuMove(roomId, getNextId(room.getPlayerIds(), userId), response.isHasWinner(), response.getWinnerId());
         }
         return response;
     }
 
-    @PostMapping("/game/end")
+    private String getNextId(List<String> ids, String currentId){
+        for(String id:ids){
+            if(!id.equals(currentId)){
+                return id;
+            }
+        }
+        return null;
+    }
+
+    @GetMapping("/game/end")
     public GomokuEndResponse endGame(@RequestParam String roomId, @RequestParam(required = false) String winnerId) {
         boolean result = gomokuService.endGame(roomId, winnerId);
         GomokuEndResponse response = new GomokuEndResponse();

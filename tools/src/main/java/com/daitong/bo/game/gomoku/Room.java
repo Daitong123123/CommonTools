@@ -7,10 +7,30 @@ public class Room {
     private String roomId;
     private String invitationCode;
     private List<String> playerIds;
+
+    public String getBlackUserId() {
+        return blackUserId;
+    }
+
+    public void setBlackUserId(String blackUserId) {
+        this.blackUserId = blackUserId;
+    }
+
+    private String blackUserId;
     private boolean gameStarted;
     private int[][] board;
     private boolean hasWinner;
     private String winnerId;
+
+    public String getGameStatus() {
+        return gameStatus;
+    }
+
+    public void setGameStatus(String gameStatus) {
+        this.gameStatus = gameStatus;
+    }
+
+    private String gameStatus;
 
     public Room(String roomId, String invitationCode) {
         this.roomId = roomId;
