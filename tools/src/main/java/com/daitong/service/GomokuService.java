@@ -2,6 +2,7 @@ package com.daitong.service;
 
 
 import com.daitong.bo.game.gomoku.Room;
+import com.daitong.bo.game.gomoku.Score;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -44,8 +45,9 @@ public class GomokuService {
     public String exitRoom(String userId, String roomId) {
        Room room = rooms.get(roomId);
        if(room.getPlayerIds().remove(userId)){
-           room.setGameStatus("ended");
-           room.setGameStarted(false);
+           if(room.getGameStatus().equals("playing")){
+               endGame(roomId, room.getPlayerIds().get(0));
+           }
            return room.getRoomId();
        }
         return null;
@@ -86,9 +88,7 @@ public class GomokuService {
                 room.setCurrentUser(getNextUser(userId, room.getPlayerIds()));
                 // 判断是否有玩家获胜
                 if (checkWin(room.getBoard(), x, y, playerValue)) {
-                    room.setHasWinner(true);
-                    room.setWinnerId(userId);
-                    room.setGameStarted(false);
+                   endGame(roomId, userId);
                 }
                 return true;
             }
@@ -160,9 +160,23 @@ public class GomokuService {
         if (room != null && room.isGameStarted()) {
             room.setGameStarted(false);
             room.setGameStatus("ended");
+            if(winnerId!=null){
+                room.setHasWinner(true);
+                room.setWinnerId(winnerId);
+                setScore(winnerId, roomId);
+            }
             return true;
         }
         return false;
+    }
+
+    private void setScore(String winnerId, String roomId){
+        List<Score> scores = rooms.get(roomId).getScores();
+        for(int i=0;i<scores.size();i++){
+            if(scores.get(i).getUserId().equals(winnerId)){
+                scores.get(i).setX(scores.get(i).getX()+1);
+            }
+        }
     }
 
     public Map<String, Room> getRooms() {

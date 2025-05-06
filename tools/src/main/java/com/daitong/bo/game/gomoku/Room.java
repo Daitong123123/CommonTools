@@ -7,7 +7,7 @@ public class Room {
     private String roomId;
     private String invitationCode;
     private List<String> playerIds;
-
+    private List<Score> scores;
     public String getBlackUserId() {
         return blackUserId;
     }
@@ -55,6 +55,15 @@ public class Room {
     // Getters and Setters
     public String getRoomId() {
         return roomId;
+    }
+
+
+    public List<Score> getScores() {
+        return scores;
+    }
+
+    public void setScores(List<Score> scores) {
+        this.scores = scores;
     }
 
     public String getInvitationCode() {
