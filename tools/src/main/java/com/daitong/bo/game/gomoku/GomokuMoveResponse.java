@@ -8,5 +8,6 @@ import lombok.ToString;
 public class GomokuMoveResponse {
     private boolean moveSuccess;
     private boolean hasWinner;
+    private String currentUser;
     private String winnerId;
 }

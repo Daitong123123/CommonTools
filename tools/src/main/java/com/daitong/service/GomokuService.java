@@ -5,9 +5,11 @@ import com.daitong.bo.game.gomoku.Room;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class GomokuService {
@@ -72,7 +74,7 @@ public class GomokuService {
             if (room.getBoard()[x][y] == 0) {
                 int playerValue = userId.equals(room.getBlackUserId())? 1:2;;
                 room.getBoard()[x][y] = playerValue;
-
+                room.setCurrentUser(getNextUser(userId, room.getPlayerIds()));
                 // 判断是否有玩家获胜
                 if (checkWin(room.getBoard(), x, y, playerValue)) {
                     room.setHasWinner(true);
@@ -83,6 +85,10 @@ public class GomokuService {
             }
         }
         return false;
+    }
+
+    private String getNextUser(String userId, List<String> players){
+        return players.stream().filter(id->!userId.equals(id)).collect(Collectors.toList()).get(0);
     }
 
     private boolean checkWin(int[][] board, int x, int y, int player) {

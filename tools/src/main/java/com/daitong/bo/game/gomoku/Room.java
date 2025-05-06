@@ -22,6 +22,16 @@ public class Room {
     private boolean hasWinner;
     private String winnerId;
 
+    public String getCurrentUser() {
+        return currentUser;
+    }
+
+    public void setCurrentUser(String currentUser) {
+        this.currentUser = currentUser;
+    }
+
+    private String currentUser;
+
     public String getGameStatus() {
         return gameStatus;
     }

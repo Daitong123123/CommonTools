@@ -111,6 +111,7 @@ public class GomokuGameController {
             int randomIndex =ThreadLocalRandom.current().nextInt(playerIds.size());
             response.setFirstId(playerIds.get(randomIndex));
             response.setSuccess(true);
+            gomokuService.getRoomStatus(roomId).setCurrentUser(response.getFirstId());
             gomokuService.getRoomStatus(roomId).setBlackUserId(response.getFirstId());
             chatService.onGomokuStart(roomId, response.getFirstId());
         }else {
