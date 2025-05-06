@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,10 +58,18 @@ public class GomokuService {
     public boolean startGame(String roomId) {
         Room room = rooms.get(roomId);
         if (room != null && room.getPlayerIds().size() == 2 && !room.isGameStarted()) {
-            for (int i = 0; i < room.getBoard().length; i++) {
-                Arrays.fill(room.getBoard()[i], 0);
+            for(int i=0;i<15;i++){
+                for(int j=0;j<15;j++){
+                    room.getBoard()[i][j]=0;
+                }
             }
             room.setGameStarted(true);
+            room.setHasWinner(false);
+            room.setWinnerId(null);
+            List<String> playerIds = room.getPlayerIds();
+            int randomIndex = ThreadLocalRandom.current().nextInt(playerIds.size());
+            room.setBlackUserId(playerIds.get(randomIndex));
+            room.setCurrentUser(room.getBlackUserId());
             room.setGameStatus("playing");
             return true;
         }
