@@ -5,10 +5,7 @@ import com.daitong.bo.game.gomoku.Room;
 import com.daitong.bo.game.gomoku.Score;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -69,6 +66,13 @@ public class GomokuService {
             room.setHasWinner(false);
             room.setWinnerId(null);
             List<String> playerIds = room.getPlayerIds();
+            ArrayList<Score> scores = new ArrayList<>();
+            Score score =  new Score();
+            score.setUserId(playerIds.get(0));
+            scores.add(score);
+            score = new Score();
+            score.setUserId(playerIds.get(1));
+            room.setScores(scores);
             int randomIndex = ThreadLocalRandom.current().nextInt(playerIds.size());
             room.setBlackUserId(playerIds.get(randomIndex));
             room.setCurrentUser(room.getBlackUserId());
