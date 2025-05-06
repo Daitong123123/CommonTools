@@ -3,6 +3,7 @@ package com.daitong.service;
 
 import com.daitong.bo.game.gomoku.Room;
 import com.daitong.bo.game.gomoku.Score;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -66,13 +67,16 @@ public class GomokuService {
             room.setHasWinner(false);
             room.setWinnerId(null);
             List<String> playerIds = room.getPlayerIds();
-            ArrayList<Score> scores = new ArrayList<>();
-            Score score =  new Score();
-            score.setUserId(playerIds.get(0));
-            scores.add(score);
-            score = new Score();
-            score.setUserId(playerIds.get(1));
-            room.setScores(scores);
+            if(CollectionUtils.isEmpty(room.getScores())){
+                ArrayList<Score> scores = new ArrayList<>();
+                Score score =  new Score();
+                score.setUserId(playerIds.get(0));
+                scores.add(score);
+                score = new Score();
+                score.setUserId(playerIds.get(1));
+                scores.add(score);
+                room.setScores(scores);
+            }
             int randomIndex = ThreadLocalRandom.current().nextInt(playerIds.size());
             room.setBlackUserId(playerIds.get(randomIndex));
             room.setCurrentUser(room.getBlackUserId());
