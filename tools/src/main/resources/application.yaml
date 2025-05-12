@@ -3,3 +3,8 @@ spring:
     active: dev  # 默认激活开发环境
 server:
   port: 60000
+aliyun:
+  access:
+    key:
+      id: LTAI5tQR6QjbBZySweyjYVex
+      secret: IPcCGorE9IKgU3RYxeFFRuzYjfOWhM
