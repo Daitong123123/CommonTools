@@ -15,6 +15,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.daitong.bo.aichat.QwenResult;
+import com.daitong.config.entity.AliyunConfig;
+import com.daitong.config.entity.BytedanceConfig;
 import com.daitong.repository.DishDisappearRepository;
 import com.daitong.repository.ModelConfigRepository;
 import com.daitong.repository.entity.DishDisappear;
@@ -38,9 +40,12 @@ public class AiChatService {
 
     @Autowired
     private ModelConfigRepository modelConfigRepository;
-    private String qwenApiKey = "sk-61c195da368d4970b92c7e08728a72a5";
 
-    private String doubaoApiKey = "13edaecf-245b-4397-85aa-ce50e0e834bf";
+    @Autowired
+    private AliyunConfig aliyunConfig;
+
+    @Autowired
+    private BytedanceConfig bytedanceConfig;
 
     private String systemPromote = "You are a helpful assistant.";
 
@@ -66,7 +71,7 @@ public class AiChatService {
                 .build();
         GenerationParam param = GenerationParam.builder()
                 // 若没有配置环境变量，请用百炼API Key将下行替换为：.apiKey("sk-xxx")
-                .apiKey(qwenApiKey)
+                .apiKey(aliyunConfig.getQwenApiKey())
                 // 此处以qwen-plus为例，可按需更换模型名称。模型列表：https://help.aliyun.com/zh/model-studio/getting-started/models
                 .model("qwen-plus")
                 .messages(Arrays.asList(systemMsg, userMsg))
@@ -80,7 +85,7 @@ public class AiChatService {
     }
 
     public String chatToQwen(String content, String systemPromote, String model){
-        return chatByHttp(content, systemPromote, qwenUrl, model==null?"qwen-plus":model, qwenApiKey);
+        return chatByHttp(content, systemPromote, qwenUrl, model==null?"qwen-plus":model, aliyunConfig.getQwenApiKey());
     }
 
     public String chatToAiByConfig(String content, String systemPromote){
@@ -95,7 +100,7 @@ public class AiChatService {
     }
 
     public String chatToDoubao(String content, String systemPromote, String model){
-        return chatByHttp(content, systemPromote, doubaoUrl, model==null?"doubao-pro-256k-241115":model, doubaoApiKey);
+        return chatByHttp(content, systemPromote, doubaoUrl, model==null?"doubao-pro-256k-241115":model, bytedanceConfig.getDoubaoApiKey());
     }
 
 
