@@ -8,7 +8,7 @@ public class AliyunDownloadResponse extends CommonResponse {
 
     private String type;
 
-    private byte[] data;
+    private String data;
 
     private String dataUrl;
 

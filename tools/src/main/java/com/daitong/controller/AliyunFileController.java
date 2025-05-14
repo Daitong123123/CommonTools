@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Base64;
+
 @RestController
 public class AliyunFileController {
 
@@ -34,7 +36,8 @@ public class AliyunFileController {
     public AliyunDownloadResponse aliyunDownload(String fileId) {
         AliyunDownloadResponse aliyunDownloadResponse = new AliyunDownloadResponse();
         try {
-            aliyunDownloadResponse.setData(aliyunCloudFileService.downloadFile(fileId));
+           String data =  aliyunCloudFileService.downloadFile(fileId);
+            aliyunDownloadResponse.setData(data);
             aliyunDownloadResponse.setCode("200");
             aliyunDownloadResponse.setMessage("ok");
             return aliyunDownloadResponse;

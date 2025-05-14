@@ -170,7 +170,7 @@ public class AliyunCloudFileService {
         return fileId;
     }
 
-    public byte[] downloadFile(String fileId){
+    public String downloadFile(String fileId){
         UrlBuilder urlBuilder = UrlBuilder.of(baseUrl+downloadPath);
         urlBuilder.addQuery("file_id",fileId);
         urlBuilder.addQuery("drive_id", DRIVER_ID);
@@ -178,12 +178,13 @@ public class AliyunCloudFileService {
         header.put(AliyunHeaders.CONTENT_TYPE,"application/x-www-form-urlencoded; charset=UTF-8");
         HttpResponse response = aliyunRequestService.get(urlBuilder.build(),header);
         if(response!=null&&response.getStatus()==200){
-            return response.bodyBytes();
+            return response.body();
         }else if(response!=null&&response.getStatus()==302){
-            HttpResponse redirectRes = aliyunRequestService.getDataNoSign(response.header("Location"));
-            if(redirectRes.isOk()){
-                return redirectRes.bodyBytes();
-            }
+//            HttpResponse redirectRes = aliyunRequestService.getDataNoSign(response.header("Location"));
+//            if(redirectRes.isOk()){
+//                return redirectRes.bodyBytes();
+//            }
+            return response.header("Location");
         }
         return null;
     }
