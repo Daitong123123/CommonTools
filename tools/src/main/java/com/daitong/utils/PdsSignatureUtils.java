@@ -1,5 +1,8 @@
 package com.daitong.utils;
 
+import com.daitong.constants.AliyunHeaders;
+import lombok.extern.log4j.Log4j2;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
@@ -16,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
+@Log4j2
 public class PdsSignatureUtils {
     private static final String HMAC_ALGORITHM = "HmacSHA1";
     private static final String DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
@@ -26,12 +30,17 @@ public class PdsSignatureUtils {
      * 生成Authorization头
      */
     public static String generateAuthorization(String accessKeyId, String accessKeySecret,
-                                               String httpMethod, String accept,
-                                               String contentMd5, String contentType,
-                                               String date, Map<String, String> headers,
+                                               String httpMethod,Map<String, String> headers,
                                                String resourcePath) throws Exception {
-        String signature = generateSignature(accessKeySecret, httpMethod, accept, contentMd5,
-                contentType, date, headers, resourcePath);
+        String signature = generateSignature(
+                accessKeySecret,
+                httpMethod,
+                headers.get(AliyunHeaders.ACCEPT),
+                headers.get(AliyunHeaders.CONTENT_MD5),
+                headers.get(AliyunHeaders.CONTENT_TYPE),
+                headers.get(AliyunHeaders.DATE),
+                headers,
+                resourcePath);
         return "acs " + accessKeyId + ":" + signature;
     }
 
@@ -45,7 +54,7 @@ public class PdsSignatureUtils {
         // 构建待签名字符串
         String stringToSign = buildStringToSign(httpMethod, accept, contentMd5,
                 contentType, date, headers, resourcePath);
-
+        log.info("stringToSign is :{}", stringToSign);
         // 使用HMAC-SHA1算法计算签名
         return calculateSignature(accessKeySecret, stringToSign);
     }
