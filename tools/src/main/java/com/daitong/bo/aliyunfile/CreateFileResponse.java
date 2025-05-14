@@ -41,7 +41,7 @@ public class CreateFileResponse {
 
     @JsonProperty("rapid_upload")
     @SerializedName("rapid_upload")
-    private String rapidUpload;
+    private Boolean rapidUpload;
 
     private String location;
 

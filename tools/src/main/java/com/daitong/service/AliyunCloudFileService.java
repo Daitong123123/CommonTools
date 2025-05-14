@@ -4,6 +4,7 @@ import cn.hutool.core.net.url.UrlBuilder;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.daitong.bo.aliyunfile.CreateFileRequest;
 import com.daitong.bo.aliyunfile.CreateFileResponse;
 import com.daitong.bo.aliyunfile.PartInfo;
@@ -14,6 +15,7 @@ import com.daitong.utils.AliyunRequestService;
 import com.daitong.utils.PdsSignatureUtils;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.*;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +30,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.security.KeyManagementException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -70,13 +73,16 @@ public class AliyunCloudFileService {
 
 
 
-    public void uploadFile(MultipartFile file) {
+    public String uploadFile(MultipartFile file) {
         List<PartInfo> partInfoList = null;
         String uploadId = null;
         String fileId = null;
         HttpResponse response = aliyunRequestService.post(baseUrl+createFilePath, new HashMap<>(),JSONObject.toJSONString(buildCreateFileRequest(file)));
         if (response != null && response.getStatus() == 201) {
             CreateFileResponse createFileResponse = JSONObject.parseObject(response.body(), CreateFileResponse.class);
+            if(Boolean.TRUE.equals(createFileResponse.getRapidUpload())){
+                return createFileResponse.getFileId();
+            }
             partInfoList = createFileResponse.getPartInfoList();
             uploadId = createFileResponse.getUploadId();
             fileId = createFileResponse.getFileId();
@@ -110,22 +116,17 @@ public class AliyunCloudFileService {
                         outputStream.write(buffer, 0, bytesRead);
                         totalRead += bytesRead;
                     }
-
                     byte[] partContent = outputStream.toByteArray();
-
                     // 创建信任所有证书的 OkHttpClient
                     OkHttpClient okHttpClient = createTrustAllClient();
-
                     // 上传分片
-                    RequestBody body = RequestBody.create(partContent, MediaType.parse("application/octet-stream"));
+                    RequestBody body = RequestBody.create(partContent, null);
                     Request request = new Request.Builder()
                             .url(uploadPartInfo.getUploadUrl())
                             .header("Content-Length", String.valueOf(size))
                             .put(body)
                             .build();
-
                     Response res = okHttpClient.newCall(request).execute();
-
                     // 判断分片是否上传成功
                     if (!res.isSuccessful()) {
                         String errorMsg = "上传分片失败, partNumber:" + number + ", 错误信息: " + res.body().string();
@@ -135,6 +136,7 @@ public class AliyunCloudFileService {
                     log.info("上传分片成功, partNumber: {}", number);
                 } catch (IOException e) {
                     log.error("处理分片 {} 时发生IO异常", number, e);
+                    throw new BaseException("500","处理分片"+number+"时发生IO异常");
                 } finally {
                     // 关闭资源
                     if (outputStream != null) {
@@ -154,17 +156,18 @@ public class AliyunCloudFileService {
                 }
             });
         }
+        // 调用完成接口 completeFilePath
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("upload_id", uploadId);
         jsonObject.put("file_id", fileId);
         jsonObject.put("drive_id", DRIVER_ID);
-        // 调用完成接口 completeFilePath
         HttpResponse completeRes = aliyunRequestService.post(baseUrl+completeFilePath, new HashMap<>(), jsonObject.toJSONString());
         log.info("completeRes:{}", completeRes);
         if(completeRes!=null&&completeRes.getStatus() != 200){
             log.info("complete upload file fail.");
             throw new BaseException("500", "complete upload file fail.");
         }
+        return fileId;
     }
 
     public byte[] downloadFile(String fileId){
@@ -183,6 +186,55 @@ public class AliyunCloudFileService {
             }
         }
         return null;
+    }
+
+    public  String getFileHash(MultipartFile file) {
+        try{
+            return Hex.encodeHexString(getFileHashBytes(file));
+        }catch (Exception e){
+            log.error("get content hash fail.",e);
+            return null;
+        }
+    }
+
+    private CreateFileRequest buildCreateFileRequest(MultipartFile file){
+        String fileName = "test";
+        // 创建文件获取上传地址
+        CreateFileRequest createFileRequest = new CreateFileRequest();
+        createFileRequest.setName(fileName);
+        createFileRequest.setDriveId(DRIVER_ID);
+        createFileRequest.setParentFileId(parentFileId);
+        createFileRequest.setType("file");
+        createFileRequest.setSize(file.getSize());
+        int chipCount = (int) (file.getSize() % chipSize == 0 ? file.getSize() / chipSize : (file.getSize() / chipSize + 1));
+        List<PartInfo> list = new ArrayList<>();
+        for (int i = 1; i <= chipCount; i++) {
+            PartInfo partInfo = new PartInfo();
+            partInfo.setPartNumber(i);
+            list.add(partInfo);
+        }
+        createFileRequest.setPartInfoList(list);
+        String hash = getFileHash(file);
+        if(StringUtils.isBlank(hash)){
+            createFileRequest.setContentHash(hash);
+        }
+        return createFileRequest;
+    }
+
+    public  byte[] getFileHashBytes(MultipartFile file) throws IOException {
+        byte[] sha1;
+        try (InputStream is = file.getInputStream()) { // 使用MultipartFile的输入流
+            MessageDigest digest = MessageDigest.getInstance("SHA1");
+            byte[] buffer = new byte[10 * 1024];
+            int len;
+            while ((len = is.read(buffer)) != -1) {
+                digest.update(buffer, 0, len);
+            }
+            sha1 = digest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA1 algorithm not found.", e);
+        }
+        return sha1;
     }
 
     private OkHttpClient createTrustAllClient() {
@@ -220,25 +272,5 @@ public class AliyunCloudFileService {
             // 返回默认客户端
             return new OkHttpClient();
         }
-    }
-
-    private CreateFileRequest buildCreateFileRequest(MultipartFile file){
-        String fileName = "test";
-        // 创建文件获取上传地址
-        CreateFileRequest createFileRequest = new CreateFileRequest();
-        createFileRequest.setName(fileName);
-        createFileRequest.setDriveId(DRIVER_ID);
-        createFileRequest.setParentFileId(parentFileId);
-        createFileRequest.setType("file");
-        createFileRequest.setSize(file.getSize());
-        int chipCount = (int) (file.getSize() % chipSize == 0 ? file.getSize() / chipSize : (file.getSize() / chipSize + 1));
-        List<PartInfo> list = new ArrayList<>();
-        for (int i = 1; i <= chipCount; i++) {
-            PartInfo partInfo = new PartInfo();
-            partInfo.setPartNumber(i);
-            list.add(partInfo);
-        }
-        createFileRequest.setPartInfoList(list);
-        return createFileRequest;
     }
 }

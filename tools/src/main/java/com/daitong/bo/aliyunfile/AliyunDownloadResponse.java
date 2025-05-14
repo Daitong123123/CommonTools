@@ -10,4 +10,6 @@ public class AliyunDownloadResponse extends CommonResponse {
 
     private byte[] data;
 
+    private String dataUrl;
+
 }

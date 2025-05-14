@@ -20,7 +20,7 @@ public class AliyunFileController {
     public BaseResponse aliyunUpload(@RequestParam("file") MultipartFile file)  {
         BaseResponse baseResponse = new BaseResponse();
         try {
-            aliyunCloudFileService.uploadFile(file);
+            baseResponse.setData(aliyunCloudFileService.uploadFile(file));
             baseResponse.setCode("200");
             baseResponse.setMessage("ok");
             baseResponse.setData("上传成功");
