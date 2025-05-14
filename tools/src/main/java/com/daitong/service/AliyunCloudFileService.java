@@ -215,8 +215,9 @@ public class AliyunCloudFileService {
         }
         createFileRequest.setPartInfoList(list);
         String hash = getFileHash(file);
-        if(StringUtils.isBlank(hash)){
+        if(StringUtils.isNotEmpty(hash)){
             createFileRequest.setContentHash(hash);
+            createFileRequest.setContentHashName("sha1");
         }
         return createFileRequest;
     }

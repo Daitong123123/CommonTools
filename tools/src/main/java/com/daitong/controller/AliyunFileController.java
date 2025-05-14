@@ -22,8 +22,7 @@ public class AliyunFileController {
         try {
             baseResponse.setData(aliyunCloudFileService.uploadFile(file));
             baseResponse.setCode("200");
-            baseResponse.setMessage("ok");
-            baseResponse.setData("上传成功");
+            baseResponse.setMessage("上传成功");
             return baseResponse;
         } catch (Exception e) {
             baseResponse.setCode("500");
