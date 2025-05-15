@@ -54,4 +54,12 @@ public class Config {
         return interceptor;
     }
 
+    @Bean
+    public CommonsMultipartResolver multipartResolver() {
+        CommonsMultipartResolver resolver = new CommonsMultipartResolver();
+        resolver.setMaxUploadSize(10 * 1024 * 1024); // 10MB
+        resolver.setMaxUploadSizePerFile(10 * 1024 * 1024); // 10MB
+        return resolver;
+    }
+
 }
