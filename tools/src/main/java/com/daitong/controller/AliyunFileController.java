@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Base64;
-
 @RestController
 public class AliyunFileController {
 
@@ -24,7 +22,7 @@ public class AliyunFileController {
     private FileManagerRepository fileManagerRepository;
 
     @PostMapping("/aliyun/upload")
-    public BaseResponse aliyunUpload(@RequestParam("file") MultipartFile file)  {
+    public BaseResponse aliyunUpload(@RequestParam("file") MultipartFile file) {
         BaseResponse baseResponse = new BaseResponse();
         try {
             baseResponse.setData(aliyunCloudFileService.uploadFile(file));
@@ -37,7 +35,7 @@ public class AliyunFileController {
         }
     }
 
-    @GetMapping ("/aliyun/download")
+    @GetMapping("/aliyun/download")
     public AliyunDownloadResponse aliyunDownload(String fileId) {
         AliyunDownloadResponse aliyunDownloadResponse = new AliyunDownloadResponse();
         try {
@@ -53,13 +51,13 @@ public class AliyunFileController {
         }
     }
 
-    @GetMapping ("/aliyun/fileExist")
+    @GetMapping("/aliyun/fileExist")
     public BaseResponse aliyunFileExist(String hash) {
         BaseResponse baseResponse = new BaseResponse();
-        String data = null ;
+        String data = null;
         try {
             FileManager fileManager = fileManagerRepository.getByHash(hash);
-            if(fileManager != null){
+            if (fileManager != null) {
                 data = fileManager.getFileId();
             }
             baseResponse.setData(data);

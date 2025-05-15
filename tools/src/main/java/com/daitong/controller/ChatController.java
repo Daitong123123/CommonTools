@@ -1,7 +1,6 @@
 package com.daitong.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.daitong.bo.common.CommonResponse;
 import com.daitong.bo.message.FriendInfoResponse;

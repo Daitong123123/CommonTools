@@ -9,12 +9,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class FileManagerRepository extends ServiceImpl<FileManagerMapper, FileManager> {
 
-    public FileManager getByHash(String hash){
+    public FileManager getByHash(String hash) {
         return getOne(new LambdaQueryWrapper<FileManager>()
                 .eq(FileManager::getContentHash, hash));
     }
 
-    public FileManager getByFileId(String fileId){
+    public FileManager getByFileId(String fileId) {
         return getOne(new LambdaQueryWrapper<FileManager>()
                 .eq(FileManager::getFileId, fileId));
     }

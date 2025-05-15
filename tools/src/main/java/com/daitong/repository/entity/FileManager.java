@@ -24,7 +24,6 @@ public class FileManager {
 
     private String fileType;
 
-    private String downloadUrl;
 
     private Date createdAt;
 

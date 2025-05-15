@@ -3,12 +3,10 @@ package com.daitong.service;
 import cn.hutool.core.net.url.UrlBuilder;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.daitong.bo.aliyunfile.CreateFileRequest;
 import com.daitong.bo.aliyunfile.CreateFileResponse;
 import com.daitong.bo.aliyunfile.PartInfo;
-import com.daitong.config.entity.AliyunConfig;
 import com.daitong.constants.AliyunHeaders;
 import com.daitong.exception.BaseException;
 import com.daitong.manager.IdManager;
@@ -51,7 +49,6 @@ import java.util.Map;
 public class AliyunCloudFileService {
 
 
-
     @Autowired
     private AliyunRequestService aliyunRequestService;
 
@@ -88,7 +85,7 @@ public class AliyunCloudFileService {
         String fileId = null;
         CreateFileRequest createFileRequest = buildCreateFileRequest(file);
         FileManager fileManager = fileManagerRepository.getByHash(createFileRequest.getContentHash());
-        if(fileManager != null){
+        if (fileManager != null) {
             return fileManager.getFileId();
         }
         HttpResponse response = aliyunRequestService.post(baseUrl + createFilePath, new HashMap<>(), JSONObject.toJSONString(createFileRequest));
@@ -186,16 +183,15 @@ public class AliyunCloudFileService {
         return fileId;
     }
 
-    private FileManager buildFileManager(long fileSize, String hash, String fileId){
+    private FileManager buildFileManager(long fileSize, String hash, String fileId) {
         FileManager fileManager = new FileManager();
         fileManager.setId(IdManager.getId());
-        fileManager.setFileSize(fileSize/1024.0+"kb");
+        fileManager.setFileSize(fileSize / 1024.0 + "kb");
         fileManager.setFileType("image");
         fileManager.setContentHash(hash);
         fileManager.setFileId(fileId);
         fileManager.setCreatedAt(new Date());
         fileManager.setUpdatedAt(new Date());
-        fileManager.setDownloadUrl(downloadFile(fileId));
         return fileManager;
     }
 
