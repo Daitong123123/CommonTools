@@ -2,6 +2,8 @@ package com.daitong.controller;
 
 import com.daitong.bo.aliyunfile.AliyunDownloadResponse;
 import com.daitong.bo.common.BaseResponse;
+import com.daitong.repository.FileManagerRepository;
+import com.daitong.repository.entity.FileManager;
 import com.daitong.service.AliyunCloudFileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,9 @@ public class AliyunFileController {
 
     @Autowired
     private AliyunCloudFileService aliyunCloudFileService;
+
+    @Autowired
+    private FileManagerRepository fileManagerRepository;
 
     @PostMapping("/aliyun/upload")
     public BaseResponse aliyunUpload(@RequestParam("file") MultipartFile file)  {
@@ -36,7 +41,7 @@ public class AliyunFileController {
     public AliyunDownloadResponse aliyunDownload(String fileId) {
         AliyunDownloadResponse aliyunDownloadResponse = new AliyunDownloadResponse();
         try {
-           String data =  aliyunCloudFileService.downloadFile(fileId);
+            String data = aliyunCloudFileService.downloadFile(fileId);
             aliyunDownloadResponse.setData(data);
             aliyunDownloadResponse.setCode("200");
             aliyunDownloadResponse.setMessage("ok");
@@ -45,6 +50,26 @@ public class AliyunFileController {
             aliyunDownloadResponse.setCode("500");
             aliyunDownloadResponse.setMessage(e.getMessage());
             return aliyunDownloadResponse;
+        }
+    }
+
+    @GetMapping ("/aliyun/fileExist")
+    public BaseResponse aliyunFileExist(String hash) {
+        BaseResponse baseResponse = new BaseResponse();
+        String data = null ;
+        try {
+            FileManager fileManager = fileManagerRepository.getByHash(hash);
+            if(fileManager != null){
+                data = fileManager.getFileId();
+            }
+            baseResponse.setData(data);
+            baseResponse.setCode("200");
+            baseResponse.setMessage("ok");
+            return baseResponse;
+        } catch (Exception e) {
+            baseResponse.setCode("500");
+            baseResponse.setMessage(e.getMessage());
+            return baseResponse;
         }
     }
 }

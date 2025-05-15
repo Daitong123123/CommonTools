@@ -3,6 +3,7 @@ package com.daitong.service;
 import cn.hutool.core.net.url.UrlBuilder;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.daitong.bo.aliyunfile.CreateFileRequest;
 import com.daitong.bo.aliyunfile.CreateFileResponse;
@@ -10,6 +11,9 @@ import com.daitong.bo.aliyunfile.PartInfo;
 import com.daitong.config.entity.AliyunConfig;
 import com.daitong.constants.AliyunHeaders;
 import com.daitong.exception.BaseException;
+import com.daitong.manager.IdManager;
+import com.daitong.repository.FileManagerRepository;
+import com.daitong.repository.entity.FileManager;
 import com.daitong.utils.AliyunRequestService;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.OkHttpClient;
@@ -37,6 +41,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +54,9 @@ public class AliyunCloudFileService {
 
     @Autowired
     private AliyunRequestService aliyunRequestService;
+
+    @Autowired
+    private FileManagerRepository fileManagerRepository;
 
     private String host = "bj20871.api.aliyunpds.com";
 
@@ -78,10 +86,16 @@ public class AliyunCloudFileService {
         List<PartInfo> partInfoList = null;
         String uploadId = null;
         String fileId = null;
-        HttpResponse response = aliyunRequestService.post(baseUrl + createFilePath, new HashMap<>(), JSONObject.toJSONString(buildCreateFileRequest(file)));
+        CreateFileRequest createFileRequest = buildCreateFileRequest(file);
+        FileManager fileManager = fileManagerRepository.getByHash(createFileRequest.getContentHash());
+        if(fileManager != null){
+            return fileManager.getFileId();
+        }
+        HttpResponse response = aliyunRequestService.post(baseUrl + createFilePath, new HashMap<>(), JSONObject.toJSONString(createFileRequest));
         if (response != null && response.getStatus() == 201) {
             CreateFileResponse createFileResponse = JSONObject.parseObject(response.body(), CreateFileResponse.class);
             if (Boolean.TRUE.equals(createFileResponse.getRapidUpload())) {
+                fileManagerRepository.save(buildFileManager(file.getSize(), createFileRequest.getContentHash(), createFileResponse.getFileId()));
                 return createFileResponse.getFileId();
             }
             partInfoList = createFileResponse.getPartInfoList();
@@ -168,7 +182,21 @@ public class AliyunCloudFileService {
             log.info("complete upload file fail.");
             throw new BaseException("500", "complete upload file fail.");
         }
+        fileManagerRepository.save(buildFileManager(file.getSize(), createFileRequest.getContentHash(), fileId));
         return fileId;
+    }
+
+    private FileManager buildFileManager(long fileSize, String hash, String fileId){
+        FileManager fileManager = new FileManager();
+        fileManager.setId(IdManager.getId());
+        fileManager.setFileSize(fileSize/1024.0+"kb");
+        fileManager.setFileType("image");
+        fileManager.setContentHash(hash);
+        fileManager.setFileId(fileId);
+        fileManager.setCreatedAt(new Date());
+        fileManager.setUpdatedAt(new Date());
+        fileManager.setDownloadUrl(downloadFile(fileId));
+        return fileManager;
     }
 
     public String downloadFile(String fileId) {
