@@ -1,8 +1,13 @@
 package com.daitong.controller;
 
+import com.daitong.bo.common.BaseResponse;
 import com.daitong.bo.common.CommonResponse;
+import com.daitong.exception.BaseException;
 import com.daitong.manager.SessionManager;
+import com.daitong.manager.UserManager;
 import com.daitong.repository.UserRepository;
+import com.daitong.repository.entity.UserEntity;
+import com.daitong.utils.ResponseUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,10 +23,10 @@ public class LoginController {
     private UserRepository userRepository;
 
     @PostMapping("/login")
-    public CommonResponse login(@RequestBody Map<String, String> loginData, HttpServletRequest request, HttpServletResponse response) {
+    public BaseResponse login(@RequestBody Map<String, String> loginData, HttpServletRequest request, HttpServletResponse response) {
         String username = loginData.get("username");
         String password = loginData.get("password");
-        CommonResponse commonResponse = new CommonResponse();
+        BaseResponse baseResponse = new BaseResponse();
         // 验证用户信息
         if (userRepository.checkUser(username, password)) {
             // 生成并设置 Cookie
@@ -30,18 +35,35 @@ public class LoginController {
             cookie.setPath("/");
             cookie.setMaxAge(3600); // 设置 Cookie 有效期为 1 小时
             response.addCookie(cookie);
-            String userId = userRepository.getId(username, password);
+            UserEntity entity = userRepository.getUserInfo(username, password);
+            baseResponse.setData(entity);
             // 将会话 ID 添加到会话管理器
-            SessionManager.addSession(sessionId, username, userId);
-            response.addHeader("userId",userId);
+            SessionManager.addSession(sessionId, entity);
+            response.addHeader("userId", entity.getUserId());
             response.addHeader("Access-Control-Expose-Headers", "userid");
-            commonResponse.setCode("200");
-            commonResponse.setMessage("ok");
-            return commonResponse;
+            baseResponse.setCode("200");
+            baseResponse.setMessage("ok");
+            return baseResponse;
         } else {
-            commonResponse.setCode("500");
-            commonResponse.setMessage("login fail");
-            return commonResponse;
+            baseResponse.setCode("500");
+            baseResponse.setMessage("login fail");
+            return baseResponse;
+        }
+    }
+
+    @GetMapping("/getCouple")
+    public BaseResponse login(String coupleId) {
+        BaseResponse baseResponse = new BaseResponse();
+        try{
+            UserEntity entity = userRepository.getCoupleInfo(coupleId, UserManager.getCurrentUser().getUserId());
+            baseResponse.setData(entity);
+            baseResponse.setCode("200");
+            baseResponse.setMessage("ok");
+            return baseResponse;
+        }catch (BaseException e){
+             return  ResponseUtils.baseFailureRes(e);
+        }catch (Exception e){
+            return  ResponseUtils.baseFailureRes();
         }
     }
 

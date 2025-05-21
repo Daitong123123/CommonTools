@@ -36,9 +36,6 @@ import java.util.List;
 public class AiChatService {
 
     @Autowired
-    private DishDisappearRepository dishDisappearRepository;
-
-    @Autowired
     private ModelConfigRepository modelConfigRepository;
 
     @Autowired
@@ -105,15 +102,7 @@ public class AiChatService {
 
 
     public String chatByHttp(String content, String systemPromote, String url, String model, String apiKey)  {
-        List<DishDisappear> unlikes = dishDisappearRepository.getUnlikes();
-        //有不喜欢的菜修改提示语
-        if(CollectionUtils.isNotEmpty(unlikes)){
-            StringBuilder stringBuilder = new StringBuilder(content);
-            stringBuilder.append("之前有推荐过");
-            unlikes.forEach(dish-> stringBuilder.append(dish.getDishName()).append(" "));
-            stringBuilder.append("但是我不太喜欢，不要推荐上面列出菜名的菜");
-            content=stringBuilder.toString();
-        }
+
         HttpRequest httpRequest = HttpRequest.post(url);
         if("dev".equals(env)){
             java.net.Proxy proxy = new java.net.Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.huawei.com", 8080));

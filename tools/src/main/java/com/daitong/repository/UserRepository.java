@@ -22,12 +22,20 @@ public class UserRepository extends ServiceImpl<UserMapper, UserEntity> {
         return CollectionUtils.isNotEmpty(list(queryWrapper));
     }
 
-    public String getId(String userName, String passWord){
+    public UserEntity getUserInfo(String userName, String passWord){
         QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(UserEntity::getUserName, userName)
                 .eq(UserEntity::getPassWord, passWord);
-        return list(queryWrapper).get(0).getUserId();
+        return list(queryWrapper).get(0);
+    }
+
+    public UserEntity getCoupleInfo(String coupleId, String userId){
+        QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserEntity::getCoupleId, coupleId)
+                .ne(UserEntity::getUserId, userId);
+        return list(queryWrapper).get(0);
     }
 
     public boolean isUsernameExists(String userName){

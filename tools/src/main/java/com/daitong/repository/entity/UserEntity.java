@@ -23,7 +23,9 @@ public class UserEntity {
 
     private String passWord;
 
-    private boolean phoneNumber;
+    private String coupleId;
+
+    private String phoneNumber;
 
     private Date createdAt;
 }

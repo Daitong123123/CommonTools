@@ -160,6 +160,15 @@ public class AiController {
                 List<String> cacheNames = cookBookCaches.stream().map(CookBookCache::getDishName).collect(Collectors.toList());
                 //屏蔽缓存的菜
                 content = setIgnoreDish(cacheNames, content);
+                List<DishDisappear> unlikes = dishDisappearRepository.getUnlikes();
+                //有不喜欢的菜修改提示语
+                if(com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(unlikes)){
+                    StringBuilder stringBuilder = new StringBuilder(content);
+                    stringBuilder.append("之前有推荐过");
+                    unlikes.forEach(dish-> stringBuilder.append(dish.getDishName()).append(" "));
+                    stringBuilder.append("但是我不太喜欢，不要推荐上面列出菜名的菜");
+                    content=stringBuilder.toString();
+                }
                 String result = aiChatService.chatToAiByConfig(content, Promotes.DISH_RECOMMEND_SYS);
                 List<DishResult> aiResults = JSONObject.parseArray(result, DishResult.class);
                 List<CookBookCache> aiData = aiResults.stream().map(re -> {

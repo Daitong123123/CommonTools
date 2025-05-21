@@ -9,4 +9,8 @@ public class UserInfo {
 
     private String userId;
 
+    private String coupleId;
+
+    private String phoneNumber;
+
 }

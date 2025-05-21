@@ -1,6 +1,7 @@
 package com.daitong.manager;
 
 import com.daitong.bo.common.UserInfo;
+import com.daitong.repository.entity.UserEntity;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,11 +21,13 @@ public class SessionManager {
      *
      * @param sessionId sessionId
      */
-    public static void addSession(String sessionId, String userName, String userId) {
+    public static void addSession(String sessionId, UserEntity user) {
         sessions.put(sessionId, System.currentTimeMillis());
         UserInfo userInfo = new UserInfo();
-        userInfo.setUserId(userId);
-        userInfo.setUserName(userName);
+        userInfo.setUserId(user.getUserId());
+        userInfo.setCoupleId(user.getCoupleId());
+        userInfo.setPhoneNumber(user.getPhoneNumber());
+        userInfo.setUserName(user.getUserName());
         users.put(sessionId,userInfo);
     }
 
