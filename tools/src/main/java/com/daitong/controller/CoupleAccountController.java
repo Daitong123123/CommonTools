@@ -13,6 +13,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * CoupleAccountController
+ *
+ * @since 2025-05-21
+ */
 @RestController
 @RequestMapping("/api/account")
 public class CoupleAccountController {

@@ -19,6 +19,7 @@ public class AuthenticationFilter implements Filter {
 
     private static final String[] WHITELIST = {"/login", "/register", "/phone-binding","/admin","/chat-websocket"};
 
+    //后续可更改为sa-token
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
