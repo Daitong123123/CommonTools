@@ -27,5 +27,7 @@ public class UserEntity {
 
     private String phoneNumber;
 
+    private String iconId;
+
     private Date createdAt;
 }

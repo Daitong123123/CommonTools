@@ -1,6 +1,7 @@
 package com.daitong.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.daitong.manager.IdManager;
 import com.daitong.repository.entity.UserEntity;
@@ -59,5 +60,13 @@ public class UserRepository extends ServiceImpl<UserMapper, UserEntity> {
         queryWrapper.lambda()
                 .eq(UserEntity::getUserId, userId);
         return this.getOne(queryWrapper);
+    }
+
+    public boolean updateIconId(String userId, String iconId){
+        UpdateWrapper<UserEntity> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.lambda()
+                .eq(UserEntity::getUserId, userId)
+                .set(UserEntity::getIconId, iconId);
+        return update(updateWrapper);
     }
 }
