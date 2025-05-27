@@ -10,12 +10,11 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
-import java.util.UUID;
 
 @Repository
 public class UserRepository extends ServiceImpl<UserMapper, UserEntity> {
 
-    public boolean checkUser(String userName, String passWord){
+    public boolean checkUser(String userName, String passWord) {
         QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(UserEntity::getUserName, userName)
@@ -23,7 +22,7 @@ public class UserRepository extends ServiceImpl<UserMapper, UserEntity> {
         return CollectionUtils.isNotEmpty(list(queryWrapper));
     }
 
-    public UserEntity getUserInfo(String userName, String passWord){
+    public UserEntity getUserInfo(String userName, String passWord) {
         QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(UserEntity::getUserName, userName)
@@ -31,7 +30,7 @@ public class UserRepository extends ServiceImpl<UserMapper, UserEntity> {
         return list(queryWrapper).get(0);
     }
 
-    public UserEntity getCoupleInfo(String coupleId, String userId){
+    public UserEntity getCoupleInfo(String coupleId, String userId) {
         QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(UserEntity::getCoupleId, coupleId)
@@ -39,14 +38,14 @@ public class UserRepository extends ServiceImpl<UserMapper, UserEntity> {
         return list(queryWrapper).get(0);
     }
 
-    public boolean isUsernameExists(String userName){
+    public boolean isUsernameExists(String userName) {
         QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(UserEntity::getUserName, userName);
         return CollectionUtils.isNotEmpty(list(queryWrapper));
     }
 
-    public boolean registerUser(String userName, String passWord){
+    public boolean registerUser(String userName, String passWord) {
         UserEntity entity = new UserEntity();
         entity.setUserName(userName);
         entity.setPassWord(passWord);
@@ -55,14 +54,14 @@ public class UserRepository extends ServiceImpl<UserMapper, UserEntity> {
         return this.save(entity);
     }
 
-    public UserEntity getUserInfo(String userId){
+    public UserEntity getUserInfo(String userId) {
         QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .eq(UserEntity::getUserId, userId);
         return this.getOne(queryWrapper);
     }
 
-    public boolean updateIconId(String userId, String iconId){
+    public boolean updateIconId(String userId, String iconId) {
         UpdateWrapper<UserEntity> updateWrapper = new UpdateWrapper<>();
         updateWrapper.lambda()
                 .eq(UserEntity::getUserId, userId)
